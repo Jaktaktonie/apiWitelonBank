@@ -1,0 +1,152 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API Dokumentacja - WitelonBank",
+        "description": "Dokumentacja API dla testowego kontrolera",
+        "contact": {
+            "email": "support@witelonbank.com"
+        },
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/test": {
+            "get": {
+                "tags": [
+                    "Test"
+                ],
+                "summary": "Testowy endpoint API",
+                "operationId": "7c2e6b5602b42636e41cc7228a9d8765",
+                "responses": {
+                    "200": {
+                        "description": "API działa prawidłowo",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "API działa prawidłowo!"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Test"
+                ],
+                "summary": "Testowy POST do API",
+                "operationId": "b41c42f0c65ddc4bfb14f25d5023861c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "param1": {
+                                        "type": "string",
+                                        "example": "Wartość 1"
+                                    },
+                                    "param2": {
+                                        "type": "string",
+                                        "example": "Wartość 2"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Pomyślnie utworzono zasób",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "param1": {
+                                            "type": "string"
+                                        },
+                                        "param2": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/send-mail": {
+            "post": {
+                "tags": [
+                    "Mailer"
+                ],
+                "summary": "Wysyła wiadomość e-mail",
+                "operationId": "8e315c1f8a0c4420ea0f7a3b47a2eee3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "example@example.com"
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Powiadomienie z WitelonBank"
+                                    },
+                                    "body": {
+                                        "type": "string",
+                                        "example": "To jest testowa wiadomość z systemu WitelonBank."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Wiadomość e-mail została wysłana",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Wiadomość wysłana!"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Test",
+            "description": "Test"
+        },
+        {
+            "name": "Mailer",
+            "description": "Mailer"
+        }
+    ]
+}

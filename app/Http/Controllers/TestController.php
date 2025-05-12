@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Mail\WitelonBankMailer;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * @OA\Info(
@@ -69,5 +71,40 @@ class TestController extends Controller
             'param1' => $request->input('param1'),
             'param2' => $request->input('param2')
         ], 201);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/send-mail",
+     *     summary="Wysyła wiadomość e-mail",
+     *     tags={"Mailer"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="email", type="string", example="example@example.com"),
+     *             @OA\Property(property="title", type="string", example="Powiadomienie z WitelonBank"),
+     *             @OA\Property(property="body", type="string", example="To jest testowa wiadomość z systemu WitelonBank.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Wiadomość e-mail została wysłana",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Wiadomość wysłana!")
+     *         )
+     *     )
+     * )
+     */
+    public function sendMail(Request $request)
+    {
+        $details = [
+            'title' => $request->input('title'),
+            'body' => $request->input('body')
+        ];
+
+        Mail::to($request->input('email'))->send(new WitelonBankMailer($details));
+
+        return response()->json(['message' => 'Wiadomość wysłana!'], 200);
     }
 }
