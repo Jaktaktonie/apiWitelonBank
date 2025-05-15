@@ -9,6 +9,310 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/konta": {
+            "get": {
+                "tags": [
+                    "Konta"
+                ],
+                "summary": "Pobiera listę kont zalogowanego użytkownika wraz z saldami",
+                "operationId": "023b73709e81a2eea4e2adbda71e7cf8",
+                "responses": {
+                    "200": {
+                        "description": "Lista kont użytkownika",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "nr_konta": {
+                                                "type": "string",
+                                                "example": "PL12345678901234567890123456"
+                                            },
+                                            "saldo": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 1500.75
+                                            },
+                                            "waluta": {
+                                                "type": "string",
+                                                "example": "PLN"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/konta/{idKonta}": {
+            "get": {
+                "tags": [
+                    "Konta"
+                ],
+                "summary": "Pobiera szczegóły konkretnego konta użytkownika",
+                "operationId": "b3a9ec4e4a930406c19de866e870dc3e",
+                "parameters": [
+                    {
+                        "name": "idKonta",
+                        "in": "path",
+                        "description": "ID konta",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Szczegóły konta",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "nr_konta": {
+                                            "type": "string",
+                                            "example": "PL12345678901234567890123456"
+                                        },
+                                        "saldo": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 1500.75
+                                        },
+                                        "limit_przelewu": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 1000
+                                        },
+                                        "zablokowane": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień (konto nie należy do użytkownika)"
+                    },
+                    "404": {
+                        "description": "Konto nie znalezione"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/przelewy": {
+            "post": {
+                "tags": [
+                    "Przelewy"
+                ],
+                "summary": "Tworzy nowy przelew",
+                "operationId": "7f3ada558b127ed64b63efb9ed499b86",
+                "requestBody": {
+                    "description": "Dane przelewu",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id_konta_nadawcy",
+                                    "nr_konta_odbiorcy",
+                                    "nazwa_odbiorcy",
+                                    "tytul",
+                                    "kwota",
+                                    "waluta_przelewu"
+                                ],
+                                "properties": {
+                                    "id_konta_nadawcy": {
+                                        "description": "ID konta, z którego wysyłany jest przelew",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "nr_konta_odbiorcy": {
+                                        "description": "Numer konta odbiorcy",
+                                        "type": "string",
+                                        "example": "PL98765432109876543210987654"
+                                    },
+                                    "nazwa_odbiorcy": {
+                                        "description": "Nazwa odbiorcy",
+                                        "type": "string",
+                                        "example": "Anna Nowak"
+                                    },
+                                    "adres_odbiorcy_linia1": {
+                                        "type": "string",
+                                        "example": "ul. Słoneczna 10",
+                                        "nullable": true
+                                    },
+                                    "adres_odbiorcy_linia2": {
+                                        "type": "string",
+                                        "example": "00-123 Warszawa",
+                                        "nullable": true
+                                    },
+                                    "tytul": {
+                                        "type": "string",
+                                        "example": "Za zakupy"
+                                    },
+                                    "kwota": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 150.99
+                                    },
+                                    "waluta_przelewu": {
+                                        "description": "Waluta przelewu (np. PLN, EUR)",
+                                        "type": "string",
+                                        "example": "PLN"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Przelew został pomyślnie utworzony (zlecony)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PrzelewResource"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Błąd danych (np. niewystarczające środki, konto zablokowane)"
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień do konta nadawcy"
+                    },
+                    "404": {
+                        "description": "Konto nadawcy nie znalezione"
+                    },
+                    "422": {
+                        "description": "Błąd walidacji"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/konta/{idKonta}/przelewy": {
+            "get": {
+                "tags": [
+                    "Przelewy"
+                ],
+                "summary": "Pobiera historię przelewów dla danego konta",
+                "operationId": "c0ff505db5be916e7fb4cfe0ee7c88c0",
+                "parameters": [
+                    {
+                        "name": "idKonta",
+                        "in": "path",
+                        "description": "ID konta",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "typ",
+                        "in": "query",
+                        "description": "Filtruj wg typu: 'wychodzace', 'przychodzace'",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "wychodzace",
+                                "przychodzace"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "strona",
+                        "in": "query",
+                        "description": "Numer strony dla paginacji",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "na_strone",
+                        "in": "query",
+                        "description": "Liczba wyników na stronę",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista przelewów",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PrzelewResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień do tego konta"
+                    },
+                    "404": {
+                        "description": "Konto nie znalezione"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/test": {
             "get": {
                 "tags": [
@@ -137,9 +441,432 @@
                     }
                 }
             }
+        },
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Autoryzacja"
+                ],
+                "summary": "Logowanie użytkownika (Krok 1: Weryfikacja hasła)",
+                "description": "Weryfikuje email i hasło. Jeśli poprawne, wysyła kod 2FA na email.",
+                "operationId": "eb9ad6907cdd515bfb968480a4af8580",
+                "requestBody": {
+                    "description": "Dane logowania",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "haslo"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "jan.kowalski@example.com"
+                                    },
+                                    "haslo": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "superTajemneHaslo123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Wymagana weryfikacja dwuetapowa. Kod wysłany na email.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Wymagana weryfikacja dwuetapowa. Kod został wysłany na Twój adres email."
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "format": "email",
+                                            "example": "jan.kowalski@example.com"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany (błędne dane lub konto niezweryfikowane)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nieprawidłowy email lub hasło."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Błąd walidacji",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Podane dane są nieprawidłowe."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Błąd serwera (np. problem z wysyłką maila)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nie udało się wysłać kodu weryfikacyjnego. Spróbuj ponownie później."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/verify-2fa": {
+            "post": {
+                "tags": [
+                    "Autoryzacja"
+                ],
+                "summary": "Logowanie użytkownika (Krok 2: Weryfikacja kodu 2FA)",
+                "description": "Weryfikuje kod 2FA i jeśli poprawny, loguje użytkownika i zwraca token API.",
+                "operationId": "c3b56fdaf50d86f74fdc046a89745f10",
+                "requestBody": {
+                    "description": "Email użytkownika i kod 2FA",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "dwuetapowy_kod"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "jan.kowalski@example.com"
+                                    },
+                                    "dwuetapowy_kod": {
+                                        "description": "6-cyfrowy kod z emaila",
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Zalogowano pomyślnie po weryfikacji 2FA",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Zalogowano pomyślnie."
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|abcdefghijklmnopqrstuvwxyz123456"
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "imie": {
+                                                    "type": "string",
+                                                    "example": "Jan"
+                                                },
+                                                "nazwisko": {
+                                                    "type": "string",
+                                                    "example": "Kowalski"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "jan.kowalski@example.com"
+                                                },
+                                                "administrator": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany (nieprawidłowy/wygasły kod lub błąd użytkownika)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nieprawidłowy lub wygasły kod weryfikacyjny."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Użytkownik nie znaleziony",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Użytkownik o podanym adresie email nie został znaleziony."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Błąd walidacji",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Podane dane są nieprawidłowe."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "Autoryzacja"
+                ],
+                "summary": "Wylogowanie użytkownika",
+                "description": "Unieważnia aktualny token API użytkownika.",
+                "operationId": "bbfed2e939f72a23785299584542cb60",
+                "responses": {
+                    "200": {
+                        "description": "Wylogowano pomyślnie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Wylogowano pomyślnie."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany (brak lub nieprawidłowy token)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "KontoResource": {
+                "title": "Konto Resource",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "numer_konta": {
+                        "type": "string",
+                        "example": "PL12345678901234567890123456"
+                    },
+                    "aktualne_saldo": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 1500.75
+                    },
+                    "waluta": {
+                        "type": "string",
+                        "example": "PLN"
+                    },
+                    "limit_przelewu_dzienny": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 1000,
+                        "nullable": true
+                    },
+                    "czy_zablokowane": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "utworzono": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-05-15T10:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "PrzelewResource": {
+                "title": "Przelew Resource",
+                "description": "Szczegółowe dane przelewu",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "typ_transakcji": {
+                        "description": "Kierunek transakcji z perspektywy przeglądanego konta (wychodzący/przychodzący)",
+                        "type": "string",
+                        "example": "wychodzący"
+                    },
+                    "id_konta_nadawcy": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nr_konta_nadawcy": {
+                        "type": "string",
+                        "example": "PL12345..."
+                    },
+                    "nr_konta_odbiorcy": {
+                        "type": "string",
+                        "example": "PL98765..."
+                    },
+                    "nazwa_odbiorcy": {
+                        "type": "string",
+                        "example": "Anna Nowak"
+                    },
+                    "adres_odbiorcy_linia1": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "adres_odbiorcy_linia2": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "tytul": {
+                        "type": "string",
+                        "example": "Za zakupy"
+                    },
+                    "kwota": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 150.99
+                    },
+                    "waluta": {
+                        "type": "string",
+                        "example": "PLN"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "zrealizowany"
+                    },
+                    "data_zlecenia": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-05-15T10:00:00Z"
+                    },
+                    "data_realizacji": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-05-15T10:01:00Z",
+                        "nullable": true
+                    },
+                    "informacja_zwrotna": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "utworzono": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-05-15T09:59:00Z"
+                    }
+                },
+                "type": "object"
+            }
         }
     },
     "tags": [
+        {
+            "name": "Konta",
+            "description": "Konta"
+        },
+        {
+            "name": "Przelewy",
+            "description": "Przelewy"
+        },
         {
             "name": "Test",
             "description": "Test"
@@ -147,6 +874,10 @@
         {
             "name": "Mailer",
             "description": "Mailer"
+        },
+        {
+            "name": "Autoryzacja",
+            "description": "Autoryzacja"
         }
     ]
 }
