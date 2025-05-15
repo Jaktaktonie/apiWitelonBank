@@ -19,6 +19,21 @@ class Konto extends Model
     {
         return Przelew::where('nr_konta_odbiorcy', $this->nr_konta)->get();
     }
+    protected $fillable = [
+        'id_uzytkownika',
+        'nr_konta',
+        'saldo',
+        'limit_przelewu', // Dodaj, jeśli brakuje
+        'zablokowane',    // Dodaj, jeśli brakuje
+        'waluta',
+    ];
+
+    protected $casts = [
+        'saldo' => 'decimal:2',
+        'limit_przelewu' => 'decimal:2', // Ważne!
+        'zablokowane' => 'boolean',    // Ważne!
+    ];
+
     public function uzytkownik()
     {
         return $this->belongsTo(Uzytkownik::class, 'id_uzytkownika');

@@ -6,16 +6,6 @@ use Illuminate\Http\Request;
 use App\Mail\WitelonBankMailer;
 use Illuminate\Support\Facades\Mail;
 
-/**
- * @OA\Info(
- *      version="1.0.0",
- *      title="API Dokumentacja - WitelonBank",
- *      description="Dokumentacja API dla testowego kontrolera",
- *      @OA\Contact(
- *          email="support@witelonbank.com"
- *      )
- * )
- */
 class TestController extends Controller
 {
     /**

@@ -109,7 +109,7 @@ class uzytkownikController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/verify-2fa",
+     *     path="/api/2fa",
      *     summary="Logowanie użytkownika (Krok 2: Weryfikacja kodu 2FA)",
      *     description="Weryfikuje kod 2FA i jeśli poprawny, loguje użytkownika i zwraca token API.",
      *     tags={"Autoryzacja"},

@@ -1,14 +1,586 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "API Dokumentacja - WitelonBank",
-        "description": "Dokumentacja API dla testowego kontrolera",
+        "title": "API WitelonBank",
+        "description": "Dokumentacja API dla systemu bankowego WitelonBank. Pamiętaj o autoryzacji (przycisk 'Authorize' na górze) dla chronionych endpointów.",
         "contact": {
             "email": "support@witelonbank.com"
         },
+        "license": {
+            "name": "MIT License",
+            "url": "https://opensource.org/licenses/MIT"
+        },
         "version": "1.0.0"
     },
+    "servers": [
+        {
+            "url": "http://127.0.0.1:8000",
+            "description": "Główny serwer API"
+        }
+    ],
     "paths": {
+        "/api/admin/konta": {
+            "get": {
+                "tags": [
+                    "Admin-Konta"
+                ],
+                "summary": "Pobiera listę wszystkich kont użytkowników",
+                "operationId": "fa66a653a68479e8a5007cdb6f1615ea",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numer strony",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista kont",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/KontoResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Brak uprawnień"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/konta/{idKonta}": {
+            "get": {
+                "tags": [
+                    "Admin-Konta"
+                ],
+                "summary": "Pobiera szczegóły konkretnego konta użytkownika",
+                "operationId": "ff93861e73ea7694a05d0e59f558eb8c",
+                "parameters": [
+                    {
+                        "name": "idKonta",
+                        "in": "path",
+                        "description": "ID konta",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Szczegóły konta",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KontoResource"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Konto nie znalezione"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/konta/{idKonta}/block": {
+            "patch": {
+                "tags": [
+                    "Admin-Konta"
+                ],
+                "summary": "Blokuje konto użytkownika",
+                "operationId": "61ccd804a28ae3ef76e5d3dc7f65a421",
+                "parameters": [
+                    {
+                        "name": "idKonta",
+                        "in": "path",
+                        "description": "ID konta do zablokowania",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Konto zablokowane",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KontoResource"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Konto nie znalezione"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/konta/{idKonta}/unblock": {
+            "patch": {
+                "tags": [
+                    "Admin-Konta"
+                ],
+                "summary": "Odblokowuje konto użytkownika",
+                "operationId": "133b8ca74d266379349c4a4d218ab854",
+                "parameters": [
+                    {
+                        "name": "idKonta",
+                        "in": "path",
+                        "description": "ID konta do odblokowania",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Konto odblokowane",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KontoResource"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Konto nie znalezione"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/konta/{idKonta}/limit": {
+            "patch": {
+                "tags": [
+                    "Admin-Konta"
+                ],
+                "summary": "Aktualizuje limit przelewu dla konta użytkownika",
+                "operationId": "bdc67feda7ed9e467e5b48ebf1289497",
+                "parameters": [
+                    {
+                        "name": "idKonta",
+                        "in": "path",
+                        "description": "ID konta",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "limit_przelewu"
+                                ],
+                                "properties": {
+                                    "limit_przelewu": {
+                                        "description": "Nowy limit przelewu",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Limit zaktualizowany",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KontoResource"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Konto nie znalezione"
+                    },
+                    "422": {
+                        "description": "Błąd walidacji"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/przelewy": {
+            "get": {
+                "tags": [
+                    "Admin-Przelewy"
+                ],
+                "summary": "Pobiera listę wszystkich przelewów w systemie",
+                "operationId": "e743ef54710e30d6bb3a2da8bfe145a8",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numer strony",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Ilość na stronę",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtruj po statusie",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "oczekujacy",
+                                "zrealizowany",
+                                "odrzucony"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "id_konta_nadawcy",
+                        "in": "query",
+                        "description": "Filtruj po ID konta nadawcy",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista przelewów",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PrzelewResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Brak uprawnień"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/raporty/przelewy": {
+            "get": {
+                "tags": [
+                    "Admin-Raporty"
+                ],
+                "summary": "Generuje raport finansowy dotyczący przelewów",
+                "operationId": "412143bd5bf6e05c6a11d9a70323f013",
+                "parameters": [
+                    {
+                        "name": "data_od",
+                        "in": "query",
+                        "description": "Data początkowa raportu (YYYY-MM-DD)",
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2023-01-01"
+                        }
+                    },
+                    {
+                        "name": "data_do",
+                        "in": "query",
+                        "description": "Data końcowa raportu (YYYY-MM-DD)",
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2023-01-31"
+                        }
+                    },
+                    {
+                        "name": "waluta",
+                        "in": "query",
+                        "description": "Filtruj wg waluty (opcjonalnie)",
+                        "schema": {
+                            "type": "string",
+                            "example": "PLN"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Raport finansowy",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "okres_od": {
+                                            "type": "string",
+                                            "format": "date"
+                                        },
+                                        "okres_do": {
+                                            "type": "string",
+                                            "format": "date"
+                                        },
+                                        "liczba_wszystkich_przelewow": {
+                                            "type": "integer"
+                                        },
+                                        "suma_wszystkich_przelewow": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "description": "Suma kwot dla danej waluty",
+                                                "type": "number",
+                                                "format": "float"
+                                            }
+                                        },
+                                        "liczba_przelewow_zrealizowanych": {
+                                            "type": "integer"
+                                        },
+                                        "suma_przelewow_zrealizowanych": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "number",
+                                                "format": "float"
+                                            }
+                                        },
+                                        "liczba_przelewow_oczekujacych": {
+                                            "type": "integer"
+                                        },
+                                        "suma_przelewow_oczekujacych": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "number",
+                                                "format": "float"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Brak uprawnień"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/kryptowaluty/ceny": {
+            "get": {
+                "tags": [
+                    "Inwestycje"
+                ],
+                "summary": "Pobiera listę dostępnych kryptowalut i ich aktualne (symulowane) ceny",
+                "operationId": "499eabc1fc36915ba7d0ce84ccd98766",
+                "responses": {
+                    "200": {
+                        "description": "Lista kryptowalut z cenami",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                },
+                                "example": {
+                                    "BTC": 150000,
+                                    "ETH": 10000
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/inwestycje/kup": {
+            "post": {
+                "tags": [
+                    "Inwestycje"
+                ],
+                "summary": "Kupuje kryptowalutę za środki z konta PLN",
+                "operationId": "ed1499ed6038a4369e1a8bc20791ff74",
+                "requestBody": {
+                    "description": "Dane do zakupu kryptowaluty",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id_konta_pln",
+                                    "symbol_krypto",
+                                    "kwota_pln"
+                                ],
+                                "properties": {
+                                    "id_konta_pln": {
+                                        "description": "ID konta PLN, z którego pobierane są środki",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "symbol_krypto": {
+                                        "description": "Symbol kryptowaluty do kupienia",
+                                        "type": "string",
+                                        "enum": [
+                                            "BTC",
+                                            "ETH"
+                                        ],
+                                        "example": "BTC"
+                                    },
+                                    "kwota_pln": {
+                                        "description": "Kwota w PLN do zainwestowania",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Kryptowaluta zakupiona pomyślnie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Zakupiono X BTC za Y PLN."
+                                        },
+                                        "portfel": {
+                                            "$ref": "#/components/schemas/PortfelResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Błąd walidacji lub niewystarczające środki",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorValidation"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Konto PLN lub portfel nie znalezione"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/portfel": {
+            "get": {
+                "tags": [
+                    "Inwestycje"
+                ],
+                "summary": "Pobiera aktualny portfel kryptowalut zalogowanego użytkownika",
+                "operationId": "187222d27d38613f116b18b1707b0db2",
+                "responses": {
+                    "200": {
+                        "description": "Portfel użytkownika",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PortfelResource"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Portfel nie znaleziony (użytkownik jeszcze nie inwestował)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nie znaleziono portfela dla tego użytkownika."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/konta": {
             "get": {
                 "tags": [
@@ -553,14 +1125,14 @@
                 }
             }
         },
-        "/api/verify-2fa": {
+        "/api/2fa": {
             "post": {
                 "tags": [
                     "Autoryzacja"
                 ],
                 "summary": "Logowanie użytkownika (Krok 2: Weryfikacja kodu 2FA)",
                 "description": "Weryfikuje kod 2FA i jeśli poprawny, loguje użytkownika i zwraca token API.",
-                "operationId": "c3b56fdaf50d86f74fdc046a89745f10",
+                "operationId": "5ecb5c6cbf0933c57cb6d3dc28c0b34d",
                 "requestBody": {
                     "description": "Email użytkownika i kod 2FA",
                     "required": true,
@@ -741,43 +1313,81 @@
     },
     "components": {
         "schemas": {
-            "KontoResource": {
-                "title": "Konto Resource",
+            "ErrorValidation": {
+                "title": "Błąd Walidacji",
                 "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "numer_konta": {
+                    "message": {
                         "type": "string",
-                        "example": "PL12345678901234567890123456"
+                        "example": "Podane dane są nieprawidłowe."
                     },
-                    "aktualne_saldo": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 1500.75
-                    },
-                    "waluta": {
-                        "type": "string",
-                        "example": "PLN"
-                    },
-                    "limit_przelewu_dzienny": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 1000,
-                        "nullable": true
-                    },
-                    "czy_zablokowane": {
-                        "type": "boolean",
-                        "example": false
-                    },
-                    "utworzono": {
-                        "type": "string",
-                        "format": "date-time",
-                        "example": "2023-05-15T10:00:00Z"
+                    "errors": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "example": "Pole email jest wymagane."
+                            }
+                        }
                     }
                 },
                 "type": "object"
+            },
+            "ErrorGeneral": {
+                "title": "Błąd Ogólny",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Wystąpił błąd."
+                    }
+                },
+                "type": "object"
+            },
+            "KontoResource": {
+                "title": "Konto Resource",
+                "type": "object",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ErrorGeneral"
+                    },
+                    {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "numer_konta": {
+                                "type": "string",
+                                "example": "PL12345678901234567890123456"
+                            },
+                            "aktualne_saldo": {
+                                "type": "number",
+                                "format": "float",
+                                "example": 1500.75
+                            },
+                            "waluta": {
+                                "type": "string",
+                                "example": "PLN"
+                            },
+                            "limit_przelewu_dzienny": {
+                                "type": "number",
+                                "format": "float",
+                                "example": 1000,
+                                "nullable": true
+                            },
+                            "czy_zablokowane": {
+                                "type": "boolean",
+                                "example": false
+                            },
+                            "utworzono": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2023-05-15T10:00:00Z"
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
             },
             "PrzelewResource": {
                 "title": "Przelew Resource",
@@ -855,10 +1465,66 @@
                     }
                 },
                 "type": "object"
+            },
+            "PortfelResource": {
+                "title": "Portfel Kryptowalut Użytkownika",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "id_uzytkownika": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "saldo_bitcoin": {
+                        "type": "string",
+                        "format": "decimal",
+                        "example": "0.50000000"
+                    },
+                    "saldo_ethereum": {
+                        "type": "string",
+                        "format": "decimal",
+                        "example": "2.12345678"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Wprowadź token JWT z prefiksem Bearer (np. 'Bearer eyJhbGciOiJIUzI1NiI...). Token uzyskasz po zalogowaniu.",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
             }
         }
     },
     "tags": [
+        {
+            "name": "Admin-Konta",
+            "description": "Operacje administracyjne na kontach użytkowników (WBK-02)"
+        },
+        {
+            "name": "Admin-Przelewy",
+            "description": "Monitorowanie transakcji (przelewów) przez administratora (WBK-03)"
+        },
+        {
+            "name": "Admin-Raporty",
+            "description": "Generowanie raportów przez administratora (WBK-04)"
+        },
+        {
+            "name": "Inwestycje",
+            "description": "Operacje związane z inwestowaniem w kryptowaluty"
+        },
         {
             "name": "Konta",
             "description": "Konta"
