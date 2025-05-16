@@ -12,7 +12,10 @@ use App\Models\Uzytkownik; // Twój model użytkownika
 use App\Mail\DwuetapowyKodMail; // Twój Mailable
 use OpenApi\Attributes as OA; // Dla Swaggera/OpenAPI
 use Illuminate\Support\Facades\Log; // Do logowania błędów
-
+use Illuminate\Support\Str;
+use App\Mail\ResetPasswordMail;
+use Illuminate\Support\Facades\DB; // Dla operacji na tabeli password_reset_tokens
+use Illuminate\Support\Carbon;   // Dla obsługi czasu
 class uzytkownikController extends Controller
 {
     /**
@@ -248,5 +251,116 @@ class uzytkownikController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Wylogowano pomyślnie.'], 200);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/forgot-password",
+     *     summary="Wysyła email z linkiem do resetowania hasła",
+     *     tags={"Autoryzacja"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email"},
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Email wysłany", @OA\JsonContent(@OA\Property(property="message", type="string"))),
+     *     @OA\Response(response=404, description="Użytkownik nie znaleziony", @OA\JsonContent(@OA\Property(property="message", type="string"))),
+     *     @OA\Response(response=422, description="Błąd walidacji", @OA\JsonContent(ref="#/components/schemas/ErrorValidation"))
+     * )
+     */
+    public function forgotPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:uzytkownicy,email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user = Uzytkownik::where('email', $request->email)->first();
+
+        if (!$user) {
+            // Ten warunek jest technicznie pokryty przez walidator 'exists', ale zostawiam dla jasności
+            return response()->json(['message' => 'Nie znaleziono użytkownika o podanym adresie email.'], 404);
+        }
+
+        $token = Str::random(64); // Generuj bezpieczny token
+
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $request->email],
+            [
+                'token' => Hash::make($token), // Hashuj token przed zapisem!
+                'created_at' => now()
+            ]
+        );
+
+        try {
+            Mail::to($request->email)->send(new ResetPasswordMail($token, $request->email));
+            return response()->json(['message' => 'Link do resetowania hasła został wysłany na Twój adres email.']);
+        } catch (\Exception $e) {
+            // Log::error('Błąd wysyłania emaila resetującego hasło: ' . $e->getMessage());
+            return response()->json(['message' => 'Nie udało się wysłać emaila. Spróbuj ponownie później.'], 500);
+        }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/reset-password",
+     *     summary="Resetuje hasło użytkownika używając tokenu",
+     *     tags={"Autoryzacja"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email", "token", "password", "password_confirmation"},
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     *             @OA\Property(property="token", type="string", example="losowy_token_z_emaila"),
+     *             @OA\Property(property="password", type="string", format="password", minLength=8, example="noweHaslo123!"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="noweHaslo123!")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Hasło zresetowane", @OA\JsonContent(@OA\Property(property="message", type="string"))),
+     *     @OA\Response(response=400, description="Nieprawidłowy token lub token wygasł", @OA\JsonContent(@OA\Property(property="message", type="string"))),
+     *     @OA\Response(response=422, description="Błąd walidacji", @OA\JsonContent(ref="#/components/schemas/ErrorValidation"))
+     * )
+     */
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:uzytkownicy,email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed', // 'confirmed' sprawdzi czy password == password_confirmation
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $resetRecord = DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->first();
+
+        if (!$resetRecord || !Hash::check($request->token, $resetRecord->token)) {
+            return response()->json(['message' => 'Nieprawidłowy token resetowania hasła.'], 400);
+        }
+
+        // Sprawdzenie ważności tokenu (domyślnie 60 minut)
+        $expiresInMinutes = config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 60);
+        if (Carbon::parse($resetRecord->created_at)->addMinutes($expiresInMinutes)->isPast()) {
+            DB::table('password_reset_tokens')->where('email', $request->email)->delete(); // Usuń wygasły token
+            return response()->json(['message' => 'Token resetowania hasła wygasł.'], 400);
+        }
+
+        $user = Uzytkownik::where('email', $request->email)->first();
+        // $user->password = Hash::make($request->password); // Jeśli kolumna hasła nazywa się 'password'
+        $user->haslo_hash = Hash::make($request->password); // UŻYJ POPRAWNEJ NAZWY KOLUMNY Z TWOJEGO MODELU UZYTKOWNIK
+        $user->save();
+
+        // Usuń token po pomyślnym zresetowaniu hasła
+        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+        return response()->json(['message' => 'Hasło zostało pomyślnie zresetowane.']);
     }
 }

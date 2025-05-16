@@ -19,6 +19,9 @@ Route::get('/uzytkownicy', [UzytkownikController::class, 'index']);
 Route::post('/login', [UzytkownikController::class, 'login']);
 Route::post('/2fa', [UzytkownikController::class, 'verifyTwoFactor']);
 
+Route::post('/forgot-password', [UzytkownikController::class, 'forgotPassword'])->name('password.request');
+Route::post('/reset-password', [UzytkownikController::class, 'resetPassword'])->name('password.reset'); // lub password.update
+
 // Trasa do wylogowania (wymaga autentykacji)
 Route::middleware('auth:sanctum')->post('/logout', [UzytkownikController::class, 'logout']);
 
