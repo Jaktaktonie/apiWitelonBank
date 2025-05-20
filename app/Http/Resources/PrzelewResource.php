@@ -1,42 +1,45 @@
 <?php
-
+// app/Http/Resources/PrzelewResource.php
 namespace App\Http\Resources;
 
-use App\Models\Konto;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\KontoSimpleResource; // Możemy stworzyć prosty resource dla konta
 
 class PrzelewResource extends JsonResource
 {
-    public function toArray($request)
+    /**
+     * Transform the resource into an array.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
     {
-        return [
+        $data = [
             'id' => $this->id,
-            'typ_transakcji' => $this->whenLoaded('kontoNadawcy', function() use ($request) {
-                // Określ typ na podstawie tego, czy zalogowany użytkownik jest nadawcą czy odbiorcą
-                // To wymaga przekazania ID konta, dla którego jest generowana historia
-                // Dla uproszczenia, tutaj można założyć, że 'id_konta_nadawcy' jest sprawdzane.
-                // Bardziej zaawansowane określenie typu wymagałoby kontekstu.
-                // Jeśli to ID konta, z którego pobieramy historię, jest równe id_konta_nadawcy, to jest to 'wychodzący'
-                // Jeśli nr_konta_odbiorcy jest numerem konta, dla którego pobieramy historię, to 'przychodzący'
-                // Na razie prostsze rozróżnienie:
-                return $this->id_konta_nadawcy == optional(Konto::find(optional($request->route())->parameter('idKonta')))->id ? 'wychodzący' : 'przychodzący';
-            }),
             'id_konta_nadawcy' => $this->id_konta_nadawcy,
-            // 'konto_nadawcy' => new KontoSimpleResource($this->whenLoaded('kontoNadawcy')), // Jeśli chcesz szczegóły konta nadawcy
-            'nr_konta_nadawcy' => optional($this->kontoNadawcy)->nr_konta, // Zakładając relację 'kontoNadawcy' w modelu Przelew
             'nr_konta_odbiorcy' => $this->nr_konta_odbiorcy,
             'nazwa_odbiorcy' => $this->nazwa_odbiorcy,
             'adres_odbiorcy_linia1' => $this->adres_odbiorcy_linia1,
             'adres_odbiorcy_linia2' => $this->adres_odbiorcy_linia2,
             'tytul' => $this->tytul,
             'kwota' => (float) $this->kwota,
-            'waluta' => $this->waluta_przelewu,
+            'waluta_przelewu' => $this->waluta_przelewu,
             'status' => $this->status,
-            'data_zlecenia' => $this->data_zlecenia ? $this->data_zlecenia->toIso8601String() : null,
-            'data_realizacji' => $this->data_realizacji ? $this->data_realizacji->toIso8601String() : null,
+            'data_zlecenia' => $this->data_zlecenia->toDateTimeString(),
+            'data_realizacji' => $this->data_realizacji ? $this->data_realizacji->toDateTimeString() : null,
             'informacja_zwrotna' => $this->informacja_zwrotna,
-            'utworzono' => $this->created_at->toIso8601String(),
+            'created_at' => $this->created_at->toDateTimeString(),
+            'updated_at' => $this->updated_at->toDateTimeString(),
         ];
+
+        // Dodajemy nowe pole, jeśli zostało ustawione w kontrolerze
+        // Używamy $this->resource->nazwa_pola, gdy pole zostało dodane dynamicznie do modelu
+        if (isset($this->resource->typ_dla_konta_kontekstowego)) {
+            $data['typ'] = $this->resource->typ_dla_konta_kontekstowego;
+        }
+        // Alternatywnie, jeśli zawsze chcesz to pole, nawet jako null:
+        // $data['typ_dla_konta_kontekstowego'] = $this->resource->typ_dla_konta_kontekstowego ?? null;
+
+        return $data;
     }
 }

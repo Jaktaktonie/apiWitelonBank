@@ -62,9 +62,13 @@ class PrzelewController extends Controller
 
         $uzytkownik = Auth::user();
         $kontoNadawcy = Konto::find($request->id_konta_nadawcy);
+        $kontoOdbiorcy = Konto::where('nr_konta', $request->nr_konta_odbiorcy)->first();
 
         if (!$kontoNadawcy) {
             return response()->json(['message' => 'Konto nadawcy nie zostało znalezione.'], 404);
+        }
+        if (!$kontoOdbiorcy) {
+            return response()->json(['message' => 'Konto Odbiorcy nie zostało znalezione.'], 404);
         }
 
         if ($kontoNadawcy->id_uzytkownika !== $uzytkownik->id) {
@@ -159,37 +163,75 @@ class PrzelewController extends Controller
      * )
      */
     public function index(Request $request, $idKonta)
-    {
-        $uzytkownik = Auth::user();
+    {// 1. Znajdź konto lub zwróć 404
         $konto = Konto::find($idKonta);
-
         if (!$konto) {
-            return response()->json(['message' => 'Konto nie zostało znalezione.'], 404);
+            return response()->json(['message' => 'Konto nie znalezione'], 404);
         }
 
-        if ($konto->id_uzytkownika !== $uzytkownik->id) {
-            return response()->json(['message' => 'Brak uprawnień do przeglądania historii przelewów tego konta.'], 403);
+        // 2. Sprawdź uprawnienia (zakładamy, że Konto ma pole 'id_uzytkownika')
+        // Możesz też użyć Policy: $this->authorize('view', $konto);
+        if (Auth::user()->id !== $konto->id_uzytkownika) {
+            return response()->json(['message' => 'Brak uprawnień do tego konta'], 403);
         }
 
-        $typ = $request->query('typ');
+        // 3. Przygotuj zapytanie
         $query = Przelew::query();
 
+        // 4. Filtrowanie
+        $typ = $request->query('typ');
+
         if ($typ === 'wychodzace') {
-            $query->where('id_konta_nadawcy', $konto->id);
+            $query->where('id_konta_nadawcy', $idKonta);
         } elseif ($typ === 'przychodzace') {
+            // Upewnij się, że model Konto ma pole 'numer_rachunku' lub odpowiednik
+            if (empty($konto->nr_konta)) {
+                // Sytuacja awaryjna - konto nie ma numeru rachunku do porównania
+                // Możesz zwrócić pustą listę lub błąd, zależnie od logiki biznesowej
+                return PrzelewResource::collection(collect()); // Pusta kolekcja
+            }
             $query->where('nr_konta_odbiorcy', $konto->nr_konta);
         } else {
-            // Domyślnie pokaż oba (wychodzące z tego konta lub przychodzące na numer tego konta)
-            $query->where(function ($q) use ($konto) {
-                $q->where('id_konta_nadawcy', $konto->id)
-                    ->orWhere('nr_konta_odbiorcy', $konto->nr_konta);
-            });
+            // Jeśli typ nie jest podany lub jest niepoprawny (wg specyfikacji, brak typu oznacza wszystkie)
+            // Pokaż przelewy, gdzie konto jest nadawcą LUB odbiorcą
+            // Upewnij się, że model Konto ma pole 'numer_rachunku'
+            if (empty($konto->nr_konta)) {
+                // Jeśli nie ma numeru rachunku, możemy pokazać tylko wychodzące
+                $query->where('id_konta_nadawcy', $idKonta);
+            } else {
+                $query->where(function ($subQuery) use ($idKonta, $konto) {
+                    $subQuery->where('id_konta_nadawcy', $idKonta)
+                        ->orWhere('nr_konta_odbiorcy', $konto->nr_konta);
+                });
+            }
         }
 
-        $przelewy = $query->orderBy('data_zlecenia', 'desc') // Najnowsze najpierw
-        ->paginate($request->query('na_strone', 15));
+        // Domyślne sortowanie - najnowsze najpierw
+        $query->orderBy('data_zlecenia', 'desc');
 
-        return PrzelewResource::collection($przelewy);
+        // 5. Paginacja
+        $naStrone = $request->query('na_strone', 15);
+        $przelewyPaginator = $query->paginate($naStrone, ['*'], 'page', $request->query('strona', 1));
+
+        // **NOWA CZĘŚĆ: Dodanie pola określającego typ przelewu z perspektywy konta**
+        $numerRachunkuKontekstowegoKonta = $konto->numer_rachunku; // Upewnij się, że to pole istnieje i jest poprawne
+
+        // Modyfikujemy kolekcję wewnątrz paginatora
+        // $przelewyPaginator->getCollection() zwraca Illuminate\Support\Collection
+        $przelewyPaginator->getCollection()->transform(function ($przelew) use ($idKonta, $numerRachunkuKontekstowegoKonta) {
+            if ($przelew->id_konta_nadawcy == $idKonta) {
+                $przelew->typ_dla_konta_kontekstowego = 'wychodzacy';
+            } elseif ($numerRachunkuKontekstowegoKonta && $przelew->nr_konta_odbiorcy == $numerRachunkuKontekstowegoKonta) {
+                $przelew->typ_dla_konta_kontekstowego = 'przychodzacy';
+            } else {
+                // Ta sytuacja nie powinna wystąpić, jeśli filtry są poprawne,
+                // ale można ustawić wartość domyślną lub null.
+                $przelew->typ_dla_konta_kontekstowego = 'przychodzacy'; // lub 'nieokreslony'
+            }
+            return $przelew; // transform oczekuje zwróconego (zmodyfikowanego) elementu
+        });
+
+        return PrzelewResource::collection($przelewyPaginator);
     }
 
     /**
