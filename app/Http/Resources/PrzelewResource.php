@@ -18,6 +18,7 @@ class PrzelewResource extends JsonResource
             'id' => $this->id,
             'id_konta_nadawcy' => $this->id_konta_nadawcy,
             'nr_konta_odbiorcy' => $this->nr_konta_odbiorcy,
+            'nazwa_nadawcy' => $this->nazwa_nadawcy,
             'nazwa_odbiorcy' => $this->nazwa_odbiorcy,
             'adres_odbiorcy_linia1' => $this->adres_odbiorcy_linia1,
             'adres_odbiorcy_linia2' => $this->adres_odbiorcy_linia2,

@@ -38,4 +38,8 @@ class Konto extends Model
     {
         return $this->belongsTo(Uzytkownik::class, 'id_uzytkownika');
     }
+    public function karty()
+    {
+        return $this->hasMany(Karta::class, 'id_konta');
+    }
 }

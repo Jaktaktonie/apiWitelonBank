@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Admin\AdminKontoController;
 use App\Http\Controllers\Api\Admin\AdminPrzelewController;
 use App\Http\Controllers\Api\Admin\AdminRaportController;
+use App\Http\Controllers\Api\KartaController;
 use App\Http\Controllers\Api\PrzelewController;
 use App\Http\Controllers\UzytkownikController;
 use Illuminate\Http\Request;
@@ -72,3 +73,19 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/portfel', [InwestycjaController::class, 'pobierzMojPortfel'])->name('portfel.show');
 });
+
+Route::middleware('auth:sanctum')->group(function () {
+    // ... inne trasy chronione ...
+
+    // Karty Płatnicze (dla konkretnego konta)
+    Route::get('konta/{konto}/karty', [KartaController::class, 'index'])->name('karty.indexForKonto');
+
+    // Karty Płatnicze (bezpośrednio po ID karty - uprawnienia będą sprawdzane w kontrolerze)
+    Route::get('karty/{karta}', [KartaController::class, 'show'])->name('karty.show');
+    Route::patch('karty/{karta}/zablokuj', [KartaController::class, 'zablokujKarte'])->name('karty.zablokuj');
+    Route::patch('karty/{karta}/odblokuj', [KartaController::class, 'odblokujKarte'])->name('karty.odblokuj');
+    Route::patch('karty/{karta}/limit', [KartaController::class, 'zmienLimit'])->name('karty.zmienLimit');
+    Route::patch('karty/{karta}/ustawienia-platnosci', [KartaController::class, 'zmienUstawieniaPlatnosci'])->name('karty.zmienUstawieniaPlatnosci');
+
+});
+

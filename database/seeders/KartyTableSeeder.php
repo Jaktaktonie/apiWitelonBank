@@ -49,5 +49,45 @@ class KartyTableSeeder extends Seeder
                 ]
             );
         }
+        Karta::firstOrCreate(
+            ['nr_karty' => '4163222243334444'], // Użyj bardziej realistycznych, ale fałszywych numerów
+            [
+                'id_konta' => 1,
+                'cvc_hash' => Hash::make('123'),
+                'data_waznosci' => now()->addYears(3)->format('Y-m-d'),
+                'zablokowana' => false,
+                'limit_dzienny' => 1000.00,
+            ]
+        );
+        Karta::firstOrCreate(
+            ['nr_karty' => '4321002234334444'], // Użyj bardziej realistycznych, ale fałszywych numerów
+            [
+                'id_konta' => 3,
+                'cvc_hash' => Hash::make('123'),
+                'data_waznosci' => now()->addYears(3)->format('Y-m-d'),
+                'zablokowana' => false,
+                'limit_dzienny' => 1000.00,
+            ]
+        );
+        Karta::firstOrCreate(
+            ['nr_karty' => '4114822238334444'], // Użyj bardziej realistycznych, ale fałszywych numerów
+            [
+                'id_konta' => 5,
+                'cvc_hash' => Hash::make('123'),
+                'data_waznosci' => now()->addYears(3)->format('Y-m-d'),
+                'zablokowana' => false,
+                'limit_dzienny' => 1000.00,
+            ]
+        );
+        Karta::firstOrCreate(
+            ['nr_karty' => '5112345678932454'], // Użyj bardziej realistycznych, ale fałszywych numerów
+            [
+                'id_konta' => 6,
+                'cvc_hash' => Hash::make('123'),
+                'data_waznosci' => now()->addYears(3)->format('Y-m-d'),
+                'zablokowana' => false,
+                'limit_dzienny' => 1000.00,
+            ]
+        );
     }
 }

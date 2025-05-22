@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Uzytkownik;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -218,7 +219,7 @@ class PrzelewController extends Controller
 
         // Modyfikujemy kolekcję wewnątrz paginatora
         // $przelewyPaginator->getCollection() zwraca Illuminate\Support\Collection
-        $przelewyPaginator->getCollection()->transform(function ($przelew) use ($idKonta, $numerRachunkuKontekstowegoKonta) {
+        $przelewyPaginator->getCollection()->transform(function ($przelew) use ($idKonta, $numerRachunkuKontekstowegoKonta,$query) {
             if ($przelew->id_konta_nadawcy == $idKonta) {
                 $przelew->typ_dla_konta_kontekstowego = 'wychodzacy';
             } elseif ($numerRachunkuKontekstowegoKonta && $przelew->nr_konta_odbiorcy == $numerRachunkuKontekstowegoKonta) {
@@ -228,6 +229,7 @@ class PrzelewController extends Controller
                 // ale można ustawić wartość domyślną lub null.
                 $przelew->typ_dla_konta_kontekstowego = 'przychodzacy'; // lub 'nieokreslony'
             }
+            $przelew->nazwa_nadawcy = Uzytkownik::query()->where('id',Konto::query()->where('id', $przelew->id_konta_nadawcy)->value('id_uzytkownika'))->value('imie');
             return $przelew; // transform oczekuje zwróconego (zmodyfikowanego) elementu
         });
 

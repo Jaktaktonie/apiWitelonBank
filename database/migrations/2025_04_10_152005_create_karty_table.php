@@ -23,6 +23,8 @@ return new class extends Migration
             $table->date('data_waznosci');       // Data ważności karty (tylko rok i miesiąc są istotne, ale date jest ok)
 
             $table->boolean('zablokowana')->default(false); // Czy karta jest zablokowana
+            $table->boolean('platnosci_internetowe_aktywne')->default(false); // Czy karta jest zablokowana
+            $table->boolean('platnosci_zblizeniowe_aktywne')->default(false); // Czy karta jest zablokowana
 
             $table->decimal('limit_dzienny', 15, 2)->nullable(); // Opcjonalny dzienny limit transakcji
             $table->string('typ_karty', 50)->nullable(); // Np. 'Visa Debit', 'Mastercard Credit', opcjonalne

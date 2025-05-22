@@ -581,6 +581,335 @@
                 ]
             }
         },
+        "/api/konta/{id_konta}/karty": {
+            "get": {
+                "tags": [
+                    "Karty Płatnicze"
+                ],
+                "summary": "Wyświetla listę kart płatniczych dla danego konta użytkownika",
+                "operationId": "13919592f61483635d01817188bf7a0f",
+                "parameters": [
+                    {
+                        "name": "id_konta",
+                        "in": "path",
+                        "description": "ID konta",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista kart",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Karta"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień do tego konta"
+                    },
+                    "404": {
+                        "description": "Konto nie znalezione"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/karty/{karta}": {
+            "get": {
+                "tags": [
+                    "Karty Płatnicze"
+                ],
+                "summary": "Wyświetla szczegóły konkretnej karty płatniczej",
+                "operationId": "0c3b02b810d5a36ec08e1a5bd1eb26c4",
+                "parameters": [
+                    {
+                        "name": "karta",
+                        "in": "path",
+                        "description": "ID karty",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Szczegóły karty",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Karta"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień do tej karty"
+                    },
+                    "404": {
+                        "description": "Karta nie znaleziona"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/karty/{karta}/zablokuj": {
+            "patch": {
+                "tags": [
+                    "Karty Płatnicze"
+                ],
+                "summary": "Blokuje kartę płatniczą",
+                "operationId": "ce43582bf2ad1f7e623f37893f4ff65d",
+                "parameters": [
+                    {
+                        "name": "karta",
+                        "in": "path",
+                        "description": "ID karty do zablokowania",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Karta zablokowana pomyślnie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Karta"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień do tej karty"
+                    },
+                    "404": {
+                        "description": "Karta nie znaleziona"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/karty/{karta}/odblokuj": {
+            "patch": {
+                "tags": [
+                    "Karty Płatnicze"
+                ],
+                "summary": "Odblokowuje kartę płatniczą",
+                "operationId": "422f395bbe8889f0a156443f7e8aa3cb",
+                "parameters": [
+                    {
+                        "name": "karta",
+                        "in": "path",
+                        "description": "ID karty do odblokowania",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Karta odblokowana pomyślnie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Karta"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień do tej karty"
+                    },
+                    "404": {
+                        "description": "Karta nie znaleziona"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/karty/{karta}/limit": {
+            "patch": {
+                "tags": [
+                    "Karty Płatnicze"
+                ],
+                "summary": "Zmienia dzienny limit transakcji dla karty",
+                "operationId": "2b5fa4c31ada505fd557ae5ba422e6ae",
+                "parameters": [
+                    {
+                        "name": "karta",
+                        "in": "path",
+                        "description": "ID karty",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Nowy limit dzienny",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "limit_dzienny"
+                                ],
+                                "properties": {
+                                    "limit_dzienny": {
+                                        "description": "Nowy dzienny limit. Ustaw 0 lub null aby usunąć limit (jeśli dozwolone).",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 500
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Limit zmieniony pomyślnie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Karta"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień do tej karty"
+                    },
+                    "404": {
+                        "description": "Karta nie znaleziona"
+                    },
+                    "422": {
+                        "description": "Błąd walidacji"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/karty/{karta}/ustawienia-platnosci": {
+            "patch": {
+                "tags": [
+                    "Karty Płatnicze"
+                ],
+                "summary": "Zmienia ustawienia płatności internetowych/zbliżeniowych dla karty",
+                "operationId": "946a657bd7b9985d3f3e1e78447d56e4",
+                "parameters": [
+                    {
+                        "name": "karta",
+                        "in": "path",
+                        "description": "ID karty",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Nowe ustawienia płatności. Przekaż tylko te, które chcesz zmienić.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "platnosci_internetowe_aktywne": {
+                                        "description": "Status płatności internetowych",
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "platnosci_zblizeniowe_aktywne": {
+                                        "description": "Status płatności zbliżeniowych",
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ustawienia płatności zmienione pomyślnie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Karta"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień do tej karty"
+                    },
+                    "404": {
+                        "description": "Karta nie znaleziona"
+                    },
+                    "422": {
+                        "description": "Błąd walidacji"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/konta": {
             "get": {
                 "tags": [
@@ -1657,6 +1986,57 @@
                     }
                 },
                 "type": "object"
+            },
+            "Karta": {
+                "title": "Karta Płatnicza",
+                "description": "Model karty płatniczej",
+                "properties": {
+                    "id": {
+                        "description": "ID karty",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "id_konta": {
+                        "description": "ID konta, do którego przypisana jest karta",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "nr_karty": {
+                        "description": "Unikalny numer karty (częściowo zamaskowany dla bezpieczeństwa w odpowiedziach)",
+                        "type": "string"
+                    },
+                    "data_waznosci": {
+                        "description": "Data ważności karty (YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "zablokowana": {
+                        "description": "Czy karta jest zablokowana",
+                        "type": "boolean"
+                    },
+                    "limit_dzienny": {
+                        "description": "Opcjonalny dzienny limit transakcji dla karty",
+                        "type": "number",
+                        "format": "float",
+                        "nullable": true
+                    },
+                    "typ_karty": {
+                        "description": "Typ karty (np. Visa Debit, Mastercard Credit)",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "description": "Data utworzenia",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "description": "Data ostatniej modyfikacji",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -1684,6 +2064,10 @@
         {
             "name": "Inwestycje",
             "description": "Operacje związane z inwestowaniem w kryptowaluty"
+        },
+        {
+            "name": "Karty Płatnicze",
+            "description": "Operacje związane z kartami płatniczymi użytkownika"
         },
         {
             "name": "Konta",
