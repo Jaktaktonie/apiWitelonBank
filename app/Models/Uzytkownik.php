@@ -69,4 +69,8 @@ class Uzytkownik extends Authenticatable
     {
         return $this->hasMany(Konto::class, 'id_uzytkownika'); // 'id_uzytkownika' to klucz obcy w tabeli 'konta'
     }
+    public function zleceniaStale()
+    {
+        return $this->hasMany(ZlecenieStale::class, 'id_uzytkownika');
+    }
 }

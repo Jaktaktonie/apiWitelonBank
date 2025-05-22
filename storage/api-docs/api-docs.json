@@ -1214,6 +1214,239 @@
                 ]
             }
         },
+        "/api/zlecenia-stale": {
+            "get": {
+                "tags": [
+                    "Zlecenia Stałe"
+                ],
+                "summary": "Wyświetla listę zleceń stałych zalogowanego użytkownika",
+                "operationId": "81606068a943cb11afa792d2f55389f4",
+                "responses": {
+                    "200": {
+                        "description": "Lista zleceń stałych",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ZlecenieStale"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Zlecenia Stałe"
+                ],
+                "summary": "Tworzy nowe zlecenie stałe",
+                "operationId": "1c8742ac38ffbcebfcaa5e49aa69ebb3",
+                "requestBody": {
+                    "description": "Dane nowego zlecenia stałego",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreZlecenieStaleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Zlecenie stałe utworzone pomyślnie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZlecenieStale"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień do konta źródłowego"
+                    },
+                    "422": {
+                        "description": "Błąd walidacji"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/zlecenia-stale/{zlecenie_stale}": {
+            "get": {
+                "tags": [
+                    "Zlecenia Stałe"
+                ],
+                "summary": "Wyświetla szczegóły konkretnego zlecenia stałego",
+                "operationId": "ff38fcc1041f517a9891390a7f5d9efb",
+                "parameters": [
+                    {
+                        "name": "zlecenie_stale",
+                        "in": "path",
+                        "description": "ID zlecenia stałego",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Szczegóły zlecenia",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZlecenieStale"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień"
+                    },
+                    "404": {
+                        "description": "Zlecenie nie znalezione"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Zlecenia Stałe"
+                ],
+                "summary": "Aktualizuje istniejące zlecenie stałe",
+                "operationId": "3847e7ea1bd710af7a9d1efa1544076f",
+                "parameters": [
+                    {
+                        "name": "zlecenie_stale",
+                        "in": "path",
+                        "description": "ID zlecenia stałego",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Dane do aktualizacji zlecenia stałego",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateZlecenieStaleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Zlecenie zaktualizowane pomyślnie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZlecenieStale"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień"
+                    },
+                    "404": {
+                        "description": "Zlecenie nie znalezione"
+                    },
+                    "422": {
+                        "description": "Błąd walidacji"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Zlecenia Stałe"
+                ],
+                "summary": "Usuwa (lub dezaktywuje) zlecenie stałe",
+                "operationId": "38c9d96adfcfe5879d153e35ea005942",
+                "parameters": [
+                    {
+                        "name": "zlecenie_stale",
+                        "in": "path",
+                        "description": "ID zlecenia stałego",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Zlecenie usunięte/dezaktywowane pomyślnie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Zlecenie stałe zostało pomyślnie dezaktywowane."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "204": {
+                        "description": "Zlecenie usunięte pomyślnie (jeśli usuwamy fizycznie)"
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień"
+                    },
+                    "404": {
+                        "description": "Zlecenie nie znalezione"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/test": {
             "get": {
                 "tags": [
@@ -1955,6 +2188,133 @@
                 },
                 "type": "object"
             },
+            "StoreZlecenieStaleRequest": {
+                "title": "Store Zlecenie Stałe Request",
+                "required": [
+                    "id_konta_zrodlowego",
+                    "nr_konta_docelowego",
+                    "nazwa_odbiorcy",
+                    "tytul_przelewu",
+                    "kwota",
+                    "czestotliwosc",
+                    "data_startu"
+                ],
+                "properties": {
+                    "id_konta_zrodlowego": {
+                        "description": "ID konta źródłowego należącego do użytkownika",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nr_konta_docelowego": {
+                        "description": "Numer konta docelowego (IBAN)",
+                        "type": "string",
+                        "example": "PL12345678901234567890123456"
+                    },
+                    "nazwa_odbiorcy": {
+                        "description": "Nazwa odbiorcy",
+                        "type": "string",
+                        "example": "Jan Kowalski"
+                    },
+                    "tytul_przelewu": {
+                        "description": "Tytuł przelewu",
+                        "type": "string",
+                        "example": "Czynsz za mieszkanie"
+                    },
+                    "kwota": {
+                        "description": "Kwota przelewu",
+                        "type": "number",
+                        "format": "float",
+                        "example": 500.5
+                    },
+                    "czestotliwosc": {
+                        "description": "Częstotliwość wykonywania",
+                        "type": "string",
+                        "enum": [
+                            "codziennie",
+                            "tygodniowo",
+                            "miesiecznie",
+                            "rocznie"
+                        ],
+                        "example": "miesiecznie"
+                    },
+                    "data_startu": {
+                        "description": "Data rozpoczęcia zlecenia (YYYY-MM-DD, nie wcześniejsza niż dzisiaj)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-06-01"
+                    },
+                    "data_zakonczenia": {
+                        "description": "Opcjonalna data zakończenia zlecenia (YYYY-MM-DD, późniejsza niż data startu)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-06-01",
+                        "nullable": true
+                    },
+                    "aktywne": {
+                        "description": "Czy zlecenie ma być aktywne (domyślnie true)",
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateZlecenieStaleRequest": {
+                "title": "Update Zlecenie Stałe Request",
+                "description": "Pola do aktualizacji zlecenia stałego. Przekaż tylko te, które chcesz zmienić.",
+                "properties": {
+                    "nr_konta_docelowego": {
+                        "description": "Numer konta docelowego (IBAN)",
+                        "type": "string",
+                        "example": "PL12345678901234567890123456"
+                    },
+                    "nazwa_odbiorcy": {
+                        "description": "Nazwa odbiorcy",
+                        "type": "string",
+                        "example": "Jan Kowalski"
+                    },
+                    "tytul_przelewu": {
+                        "description": "Tytuł przelewu",
+                        "type": "string",
+                        "example": "Czynsz za mieszkanie"
+                    },
+                    "kwota": {
+                        "description": "Kwota przelewu",
+                        "type": "number",
+                        "format": "float",
+                        "example": 550
+                    },
+                    "czestotliwosc": {
+                        "description": "Częstotliwość wykonywania",
+                        "type": "string",
+                        "enum": [
+                            "codziennie",
+                            "tygodniowo",
+                            "miesiecznie",
+                            "rocznie"
+                        ],
+                        "example": "miesiecznie"
+                    },
+                    "data_startu": {
+                        "description": "Data rozpoczęcia zlecenia (YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-07-01"
+                    },
+                    "data_zakonczenia": {
+                        "description": "Opcjonalna data zakończenia zlecenia (YYYY-MM-DD, późniejsza niż data startu)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-06-01",
+                        "nullable": true
+                    },
+                    "aktywne": {
+                        "description": "Czy zlecenie ma być aktywne",
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            },
             "PortfelResource": {
                 "title": "Portfel Kryptowalut Użytkownika",
                 "properties": {
@@ -2037,6 +2397,80 @@
                     }
                 },
                 "type": "object"
+            },
+            "ZlecenieStale": {
+                "title": "Zlecenie Stałe",
+                "description": "Model zlecenia stałego (płatności cyklicznej)",
+                "properties": {
+                    "id": {
+                        "description": "ID zlecenia",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "id_uzytkownika": {
+                        "description": "ID użytkownika, który utworzył zlecenie",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "id_konta_zrodlowego": {
+                        "description": "ID konta źródłowego",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "nr_konta_docelowego": {
+                        "description": "Numer konta docelowego",
+                        "type": "string"
+                    },
+                    "nazwa_odbiorcy": {
+                        "description": "Nazwa odbiorcy przelewu",
+                        "type": "string"
+                    },
+                    "tytul_przelewu": {
+                        "description": "Tytuł przelewu",
+                        "type": "string"
+                    },
+                    "kwota": {
+                        "description": "Kwota przelewu",
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "czestotliwosc": {
+                        "description": "Częstotliwość wykonywania (np. 'miesiecznie', 'tygodniowo')",
+                        "type": "string"
+                    },
+                    "data_startu": {
+                        "description": "Data rozpoczęcia zlecenia",
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "data_nastepnego_wykonania": {
+                        "description": "Data następnego planowanego wykonania",
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "data_zakonczenia": {
+                        "description": "Data zakończenia zlecenia (opcjonalnie)",
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "aktywne": {
+                        "description": "Czy zlecenie jest aktywne",
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "description": "Data utworzenia",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "description": "Data ostatniej modyfikacji",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -2068,6 +2502,10 @@
         {
             "name": "Karty Płatnicze",
             "description": "Operacje związane z kartami płatniczymi użytkownika"
+        },
+        {
+            "name": "Zlecenia Stałe",
+            "description": "Operacje związane ze zleceniami stałymi (płatnościami cyklicznymi)"
         },
         {
             "name": "Konta",

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Konto extends Model
 {
@@ -42,4 +43,9 @@ class Konto extends Model
     {
         return $this->hasMany(Karta::class, 'id_konta');
     }
+    public function zleceniaStaleZrodlowe(): HasMany
+    {
+        return $this->hasMany(ZlecenieStale::class, 'id_konta_zrodlowego');
+    }
+
 }

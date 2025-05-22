@@ -89,3 +89,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 
+use App\Http\Controllers\Api\ZlecenieStaleController;
+
+Route::middleware('auth:sanctum')->group(function () {
+    // ... inne trasy ...
+
+    // Zlecenia Stałe
+    Route::apiResource('zlecenia-stale', ZlecenieStaleController::class)->parameters([
+        'zlecenia-stale' => 'zlecenie_stale' // Zmiana nazwy parametru dla route model binding
+    ]);
+});
+
