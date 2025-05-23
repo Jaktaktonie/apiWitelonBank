@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\PrzelewOtrzymanyOdbiorcaMail;
+use App\Mail\PrzelewWykonanyNadawcaMail;
 use App\Models\Konto;
 use App\Models\Przelew;
 use App\Models\ZlecenieStale;
@@ -9,6 +11,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ProcessScheduledPayments extends Command
 {
@@ -75,7 +78,7 @@ class ProcessScheduledPayments extends Command
                 }
 
                 // 4. Zapis do historii przelewów
-                Przelew::create([
+                $nowyPrzelew = Przelew::create([
                     'id_konta_nadawcy' => $kontoNadawcy->id,
                     'nr_konta_odbiorcy' => $zlecenie->nr_konta_docelowego,
                     // 'id_konta_odbiorcy_wewnetrznego_lub_uzytkownika' => $kontoOdbiorcy ? $kontoOdbiorcy->id : null, // Jeśli masz takie pole
@@ -93,6 +96,7 @@ class ProcessScheduledPayments extends Command
                     'informacja_zwrotna' => 'Przelew cykliczny wykonany automatycznie.'
                 ]);
                 Log::info("Scheduler: Zlecenie ID: {$zlecenie->id} - przelew zapisany do historii.");
+                $nowyPrzelew->load(['kontoNadawcy.uzytkownik']); // Załaduj relacje dla maila
 
                 // 5. Aktualizacja zlecenia stałego
                 $nastepnaData = $zlecenie->obliczNastepneWykonanie(Carbon::now()->format('Y-m-d')); // Przekazujemy dzisiejszą datę jako bazę do obliczeń
@@ -108,6 +112,26 @@ class ProcessScheduledPayments extends Command
                 $zlecenie->save();
 
                 DB::commit();
+                // WYSYŁANIE POWIADOMIEŃ EMAIL PO UDANEJ TRANSAKCJI BANKOWEJ
+                try {
+                    // 1. Powiadomienie dla nadawcy (właściciela zlecenia)
+                    $nadawcaZlecenia = $zlecenie->uzytkownik;
+                    if ($nadawcaZlecenia) {
+                        Mail::to($nadawcaZlecenia->email)->send(new PrzelewWykonanyNadawcaMail($nowyPrzelew, $nadawcaZlecenia));
+                    }
+
+                    // 2. Powiadomienie dla odbiorcy (jeśli jest użytkownikiem naszego banku)
+                    $kontoOdbiorcyWewnetrzny = Konto::where('nr_konta', $nowyPrzelew->nr_konta_odbiorcy)->with('uzytkownik')->first();
+                    if ($kontoOdbiorcyWewnetrzny && $kontoOdbiorcyWewnetrzny->uzytkownik) {
+                        // Upewnij się, że saldo konta odbiorcy jest aktualne po wykonaniu przelewu
+                        $kontoOdbiorcyWewnetrzny->refresh(); // Odśwież model z bazy
+                        Mail::to($kontoOdbiorcyWewnetrzny->uzytkownik->email)->send(new PrzelewOtrzymanyOdbiorcaMail($nowyPrzelew, $kontoOdbiorcyWewnetrzny->uzytkownik, $kontoOdbiorcyWewnetrzny));
+                    }
+                    Log::info("Scheduler: Powiadomienia email dla przelewu ID: {$nowyPrzelew->id} (ze zlecenia ID: {$zlecenie->id}) zostały wysłane.");
+
+                } catch (\Exception $e) {
+                    Log::error("Scheduler: Błąd podczas wysyłania powiadomień email dla przelewu ID: {$nowyPrzelew->id} (ze zlecenia ID: {$zlecenie->id}). Błąd: " . $e->getMessage());
+                }
                 $this->info("Zlecenie ID: {$zlecenie->id} przetworzone pomyślnie.");
 
             } catch (\Exception $e) {

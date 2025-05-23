@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\PrzelewOtrzymanyOdbiorcaMail;
+use App\Mail\PrzelewWykonanyNadawcaMail;
 use App\Models\Uzytkownik;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB; // Dla transakcji
 use App\Models\Konto;
@@ -138,6 +142,22 @@ class PrzelewController extends Controller
 
             DB::commit();
 
+            // WYSYŁANIE POWIADOMIEŃ EMAIL
+            try {
+                // 1. Powiadomienie dla nadawcy
+                $nadawca = $przelew->kontoNadawcy->uzytkownik; // $uzytkownik (Auth::user()) powinien być tym samym
+                if ($nadawca) {
+                    Mail::to($nadawca->email)->send(new PrzelewWykonanyNadawcaMail($przelew, $nadawca));
+                }
+
+                // 2. Powiadomienie dla odbiorcy (jeśli jest użytkownikiem naszego banku)
+                Mail::to($kontoOdbiorcy->uzytkownik->email)->send(new PrzelewOtrzymanyOdbiorcaMail($przelew, $kontoOdbiorcy->uzytkownik, $kontoOdbiorcy));
+
+                Log::info("Powiadomienia email dla przelewu ID: {$przelew->id} zostały wysłane.");
+            } catch (\Exception $e) {
+                Log::error("Błąd podczas wysyłania powiadomień email dla przelewu ID: {$przelew->id}. Błąd: " . $e->getMessage());
+            }
+
             return new PrzelewResource($przelew); // Zwracamy utworzony przelew
 
         } catch (\Exception $e) {
@@ -230,6 +250,7 @@ class PrzelewController extends Controller
                 $przelew->typ_dla_konta_kontekstowego = 'przychodzacy'; // lub 'nieokreslony'
             }
             $przelew->nazwa_nadawcy = Uzytkownik::query()->where('id',Konto::query()->where('id', $przelew->id_konta_nadawcy)->value('id_uzytkownika'))->value('imie');
+            $przelew->nr_konta_nadawcy = Konto::query()->where('id', $przelew->id_konta_nadawcy)->value('nr_konta');
             return $przelew; // transform oczekuje zwróconego (zmodyfikowanego) elementu
         });
 

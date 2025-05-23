@@ -9,6 +9,8 @@ use App\Models\Portfel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http; // << Importuj klienta HTTP
+use Illuminate\Support\Facades\Log;   // << Importuj Log do logowania błędów
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -20,19 +22,77 @@ use Illuminate\Validation\Rule;
  */
 class InwestycjaController extends Controller
 {
-    // Symulowane ceny kryptowalut (w PLN za jednostkę)
-    private $cenyKryptowalut = [
-        'BTC' => 150000.00,
-        'ETH' => 10000.00,
+    // Usunięto symulowane ceny, będą pobierane z API
+    // private $cenyKryptowalut = [
+    //     'BTC' => 150000.00,
+    //     'ETH' => 10000.00,
+    // ];
+
+    // Dostępne symbole kryptowalut i ich ID w CoinGecko
+    private $dostepneKrypto = [
+        'BTC' => 'bitcoin',
+        'ETH' => 'ethereum',
     ];
 
-    // Dostępne symbole kryptowalut
-    private $dostepneKrypto = ['BTC', 'ETH'];
+    // Adres URL API CoinGecko do pobierania cen
+    private const COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/simple/price';
+
+    /**
+     * Prywatna metoda do pobierania aktualnych cen kryptowalut z API.
+     * @param array $symboleKrypto Lista symboli do pobrania (np. ['BTC', 'ETH'])
+     * @return array|null Zwraca tablicę z cenami ['SYMBOL' => cena] lub null w przypadku błędu.
+     */
+    private function pobierzAktualneCenyZApi(array $symboleKrypto): ?array
+    {
+        if (empty($symboleKrypto)) {
+            return [];
+        }
+
+        $idsCoinGecko = [];
+        foreach ($symboleKrypto as $symbol) {
+            if (isset($this->dostepneKrypto[$symbol])) {
+                $idsCoinGecko[] = $this->dostepneKrypto[$symbol];
+            }
+        }
+
+        if (empty($idsCoinGecko)) {
+            Log::warning('Brak poprawnych symboli do pobrania cen z CoinGecko.');
+            return null;
+        }
+
+        try {
+            $response = Http::timeout(5)->get(self::COINGECKO_API_URL, [
+                'ids' => implode(',', $idsCoinGecko),
+                'vs_currencies' => 'pln',
+            ]);
+
+            if ($response->successful()) {
+                $daneApi = $response->json();
+                $ceny = [];
+                // Mapowanie z powrotem na nasze symbole (BTC, ETH)
+                foreach ($this->dostepneKrypto as $symbolNaszejAplikacji => $idCoinGecko) {
+                    if (isset($daneApi[$idCoinGecko]['pln'])) {
+                        $ceny[$symbolNaszejAplikacji] = (float) $daneApi[$idCoinGecko]['pln'];
+                    }
+                }
+                return $ceny;
+            } else {
+                Log::error('Błąd podczas pobierania cen z CoinGecko: ' . $response->status(), [
+                    'response_body' => $response->body()
+                ]);
+                return null;
+            }
+        } catch (\Exception $e) {
+            Log::error('Wyjątek podczas pobierania cen z CoinGecko: ' . $e->getMessage());
+            return null;
+        }
+    }
+
 
     /**
      * @OA\Get(
      *     path="/api/kryptowaluty/ceny",
-     *     summary="Pobiera listę dostępnych kryptowalut i ich aktualne (symulowane) ceny",
+     *     summary="Pobiera listę dostępnych kryptowalut i ich aktualne ceny z API",
      *     tags={"Inwestycje"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Response(
@@ -40,14 +100,24 @@ class InwestycjaController extends Controller
      *         description="Lista kryptowalut z cenami",
      *         @OA\JsonContent(
      *             type="object",
-     *             example={"BTC": 150000.00, "ETH": 10000.00}
+     *             example={"BTC": 250000.50, "ETH": 12000.75}
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=503,
+     *         description="Nie udało się pobrać cen z zewnętrznego API",
+     *         @OA\JsonContent(@OA\Property(property="message", type="string", example="Nie udało się pobrać aktualnych cen kryptowalut."))
      *     )
      * )
      */
     public function pobierzCeny()
     {
-        return response()->json($this->cenyKryptowalut);
+        $ceny = $this->pobierzAktualneCenyZApi(array_keys($this->dostepneKrypto));
+
+        if ($ceny === null) {
+            return response()->json(['message' => 'Nie udało się pobrać aktualnych cen kryptowalut. Spróbuj ponownie później.'], 503);
+        }
+        return response()->json($ceny);
     }
 
     /**
@@ -75,14 +145,15 @@ class InwestycjaController extends Controller
      *         )
      *     ),
      *     @OA\Response(response=422, description="Błąd walidacji lub niewystarczające środki", @OA\JsonContent(ref="#/components/schemas/ErrorValidation")),
-     *     @OA\Response(response=404, description="Konto PLN lub portfel nie znalezione")
+     *     @OA\Response(response=404, description="Konto PLN lub portfel nie znalezione"),
+     *     @OA\Response(response=503, description="Nie udało się pobrać aktualnej ceny kryptowaluty z API")
      * )
      */
     public function kup(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'id_konta_pln' => 'required|integer|exists:konta,id',
-            'symbol_krypto' => ['required', 'string', Rule::in($this->dostepneKrypto)],
+            'symbol_krypto' => ['required', 'string', Rule::in(array_keys($this->dostepneKrypto))],
             'kwota_pln' => 'required|numeric|min:0.01', // Minimalna kwota inwestycji
         ]);
 
@@ -113,11 +184,18 @@ class InwestycjaController extends Controller
             return response()->json(['message' => 'Niewystarczające środki na koncie PLN.', 'saldo_dostepne' => $kontoPLN->saldo], 422);
         }
 
-        // 2. Pobierz cenę kryptowaluty
-        $cenaJednostkowaKrypto = $this->cenyKryptowalut[$symbolKrypto] ?? null;
-        if (!$cenaJednostkowaKrypto || $cenaJednostkowaKrypto <= 0) {
-            return response()->json(['message' => 'Nie można ustalić ceny dla wybranej kryptowaluty.'], 422);
+        // 2. Pobierz aktualną cenę kryptowaluty z API
+        $aktualneCeny = $this->pobierzAktualneCenyZApi([$symbolKrypto]);
+        if ($aktualneCeny === null || !isset($aktualneCeny[$symbolKrypto])) {
+            return response()->json(['message' => 'Nie można ustalić aktualnej ceny dla wybranej kryptowaluty. Spróbuj ponownie później.'], 503);
         }
+        $cenaJednostkowaKrypto = $aktualneCeny[$symbolKrypto];
+
+        if ($cenaJednostkowaKrypto <= 0) { // Dodatkowe zabezpieczenie
+            Log::error("Pobrana cena dla {$symbolKrypto} jest nieprawidłowa: {$cenaJednostkowaKrypto}");
+            return response()->json(['message' => 'Pobrana cena kryptowaluty jest nieprawidłowa. Spróbuj ponownie później.'], 503);
+        }
+
 
         // 3. Oblicz ilość kryptowaluty
         $iloscKryptoDoKupienia = $kwotaPLN / $cenaJednostkowaKrypto;
@@ -125,24 +203,18 @@ class InwestycjaController extends Controller
         // 4. Znajdź lub utwórz portfel użytkownika
         $portfel = Portfel::firstOrCreate(
             ['id_uzytkownika' => $uzytkownik->id],
-            // Domyślne wartości, jeśli portfel jest tworzony
             ['saldo_bitcoin' => 0, 'saldo_ethereum' => 0]
         );
 
         // 5. Wykonaj transakcję w bazie danych
         try {
             DB::transaction(function () use ($kontoPLN, $portfel, $symbolKrypto, $iloscKryptoDoKupienia, $kwotaPLN) {
-                // Zmniejsz saldo PLN
                 $kontoPLN->saldo -= $kwotaPLN;
                 $kontoPLN->save();
 
-                // Zwiększ saldo krypto w portfelu
-                // Zwiększ saldo krypto w portfelu
-                // POPRAWKA: Używamy mapowania symbolu na pełną nazwę kolumny
                 $mapowanieSymbolNaKolumne = [
                     'BTC' => 'saldo_bitcoin',
                     'ETH' => 'saldo_ethereum',
-                    // Dodaj inne mapowania, jeśli masz więcej kryptowalut
                 ];
 
                 if (!isset($mapowanieSymbolNaKolumne[$symbolKrypto])) {
@@ -150,35 +222,22 @@ class InwestycjaController extends Controller
                 }
 
                 $kolumnaSaldoKrypto = $mapowanieSymbolNaKolumne[$symbolKrypto];
-
-                // Bezpośredni dostęp i aktualizacja atrybutu Eloquent
-                // Rzutowanie na float jest ważne dla poprawnej operacji arytmetycznej
                 $biezaceSaldoKrypto = (float) $portfel->{$kolumnaSaldoKrypto};
                 $portfel->{$kolumnaSaldoKrypto} = $biezaceSaldoKrypto + $iloscKryptoDoKupienia;
                 $portfel->save();
             });
         } catch (\Exception $e) {
-            // Log::error("Błąd podczas zakupu krypto: " . $e->getMessage());
+            Log::error("Błąd podczas zakupu krypto: " . $e->getMessage(), ['exception' => $e]);
             return response()->json(['message' => 'Wystąpił błąd podczas przetwarzania transakcji. Spróbuj ponownie.', 'error_details' => $e->getMessage()], 500);
         }
 
-        // Załaduj zaktualizowany portfel do odpowiedzi
         $portfel->refresh();
 
-        // Utwórz PortfelResource jeśli go masz, inaczej zwróć surowy model
-        // return new PortfelResource($portfel); // Jeśli masz PortfelResource
         return response()->json([
-            'message' => sprintf('Zakupiono %.8f %s za %.2f PLN.', $iloscKryptoDoKupienia, $symbolKrypto, $kwotaPLN),
-            'portfel' => $portfel // Lub new PortfelResource($portfel)
+            'message' => sprintf('Zakupiono %.8f %s za %.2f PLN (cena jednostkowa: %.2f PLN).', $iloscKryptoDoKupienia, $symbolKrypto, $kwotaPLN, $cenaJednostkowaKrypto),
+            'portfel' => new PortfelResource($portfel) // Używam PortfelResource, jeśli go masz
         ]);
     }
-
-    /**
-     * @OA\Tag(
-     *     name="Inwestycje",
-     *     description="Operacje związane z inwestowaniem w kryptowaluty oraz zarządzaniem portfelem" // Zaktualizowany opis tagu
-     * )
-     */
 
     /**
      * @OA\Get(
@@ -201,23 +260,16 @@ class InwestycjaController extends Controller
     public function pobierzMojPortfel()
     {
         $uzytkownik = Auth::user();
-
-        // Znajdź portfel użytkownika.
-        // Można użyć firstOrCreate, aby automatycznie stworzyć pusty portfel, jeśli go nie ma,
-        // lub first() jeśli zakładamy, że portfel jest tworzony tylko przy pierwszej inwestycji.
-        // Dla spójności z metodą kup(), użyjemy firstOrCreate.
         $portfel = Portfel::firstOrCreate(
             ['id_uzytkownika' => $uzytkownik->id],
-            // Domyślne wartości, jeśli portfel jest tworzony (chociaż w tym miejscu raczej powinien już istnieć)
             ['saldo_bitcoin' => 0.00000000, 'saldo_ethereum' => 0.00000000]
         );
 
-        if (!$portfel) {
-            // Ten warunek jest mniej prawdopodobny przy użyciu firstOrCreate, ale zostawiam dla bezpieczeństwa
-            return response()->json(['message' => 'Nie znaleziono portfela dla tego użytkownika.'], 404);
-        }
+        // W tym miejscu nie musimy już sprawdzać czy portfel istnieje, bo firstOrCreate go utworzy
+        // if (!$portfel) {
+        //     return response()->json(['message' => 'Nie znaleziono portfela dla tego użytkownika.'], 404);
+        // }
 
         return new PortfelResource($portfel);
     }
 }
-

@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Mail;
 
 class PrzelewResource extends JsonResource
 {
@@ -17,6 +18,7 @@ class PrzelewResource extends JsonResource
         $data = [
             'id' => $this->id,
             'id_konta_nadawcy' => $this->id_konta_nadawcy,
+            'nr_konta_nadawcy' => $this->nr_konta_nadawcy,
             'nr_konta_odbiorcy' => $this->nr_konta_odbiorcy,
             'nazwa_nadawcy' => $this->nazwa_nadawcy,
             'nazwa_odbiorcy' => $this->nazwa_odbiorcy,
@@ -42,5 +44,6 @@ class PrzelewResource extends JsonResource
         // $data['typ_dla_konta_kontekstowego'] = $this->resource->typ_dla_konta_kontekstowego ?? null;
 
         return $data;
+
     }
 }
