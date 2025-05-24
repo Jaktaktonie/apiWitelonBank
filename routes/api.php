@@ -35,7 +35,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // ... inne trasy chronione ...
     Route::get('/konta', [KontoController::class, 'index']); // Pobiera listę kont użytkownika
     Route::get('/konta/{konto}', [KontoController::class, 'show']); // Pobiera szczegóły konkretnego konta (z Route Model Binding)
+    Route::post('konta/{konto}/zglos-zamkniecie', [KontoController::class, 'zglosZamkniecieKonta'])->name('konta.zglosZamkniecie');
 });
+Route::get('konta/zamknij-potwierdz/{token}', [KontoController::class, 'potwierdzZamkniecieKonta'])->name('konta.potwierdzZamkniecie');
 
 Route::middleware('auth:sanctum')->group(function () {
     // ... inne trasy ...

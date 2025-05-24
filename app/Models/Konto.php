@@ -27,12 +27,16 @@ class Konto extends Model
         'limit_przelewu', // Dodaj, jeśli brakuje
         'zablokowane',    // Dodaj, jeśli brakuje
         'waluta',
+        'token_zamkniecia',
+        'token_zamkniecia_wygasa_o',
     ];
 
     protected $casts = [
         'saldo' => 'decimal:2',
         'limit_przelewu' => 'decimal:2', // Ważne!
         'zablokowane' => 'boolean',    // Ważne!
+        'token_zamkniecia_wygasa_o' => 'datetime',
+
     ];
 
     public function uzytkownik()

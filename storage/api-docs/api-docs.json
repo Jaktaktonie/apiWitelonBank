@@ -428,7 +428,7 @@
                 "tags": [
                     "Inwestycje"
                 ],
-                "summary": "Pobiera listę dostępnych kryptowalut i ich aktualne (symulowane) ceny",
+                "summary": "Pobiera listę dostępnych kryptowalut i ich aktualne ceny z API",
                 "operationId": "499eabc1fc36915ba7d0ce84ccd98766",
                 "responses": {
                     "200": {
@@ -439,8 +439,24 @@
                                     "type": "object"
                                 },
                                 "example": {
-                                    "BTC": 150000,
-                                    "ETH": 10000
+                                    "BTC": 250000.5,
+                                    "ETH": 12000.75
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Nie udało się pobrać cen z zewnętrznego API",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nie udało się pobrać aktualnych cen kryptowalut."
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -530,6 +546,9 @@
                     },
                     "404": {
                         "description": "Konto PLN lub portfel nie znalezione"
+                    },
+                    "503": {
+                        "description": "Nie udało się pobrać aktualnej ceny kryptowaluty z API"
                     }
                 },
                 "security": [
@@ -1029,6 +1048,82 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/konta/{konto}/zglos-zamkniecie": {
+            "post": {
+                "tags": [
+                    "Konta"
+                ],
+                "summary": "Inicjuje proces zamykania konta przez użytkownika",
+                "operationId": "e8d0c6a8417913c69956e6e36c4262ec",
+                "parameters": [
+                    {
+                        "name": "konto",
+                        "in": "path",
+                        "description": "ID konta do zamknięcia",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Wysłano email z linkiem potwierdzającym"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień do tego konta"
+                    },
+                    "404": {
+                        "description": "Konto nie znalezione"
+                    },
+                    "409": {
+                        "description": "Konto już jest zablokowane lub ma niezerowe saldo (konflikt)"
+                    },
+                    "500": {
+                        "description": "Błąd wysyłki emaila"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/konta/zamknij-potwierdz/{token}": {
+            "get": {
+                "tags": [
+                    "Konta"
+                ],
+                "summary": "Potwierdza i wykonuje zamknięcie konta na podstawie tokenu z emaila",
+                "operationId": "3a09ca83fe7ee77288178ef609be0bfb",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "description": "Token potwierdzający zamknięcie konta",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Konto zostało pomyślnie zamknięte"
+                    },
+                    "400": {
+                        "description": "Nieprawidłowy lub przedawniony token"
+                    },
+                    "404": {
+                        "description": "Konto nie znalezione dla tego tokenu"
+                    },
+                    "409": {
+                        "description": "Nie można zamknąć konta (np. dodatnie saldo)"
+                    }
+                }
             }
         },
         "/api/przelewy": {
