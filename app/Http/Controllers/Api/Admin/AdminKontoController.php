@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\KontoResource; // Użyj swojego istniejącego KontoResource
 use App\Models\Konto;
+use App\Models\Uzytkownik;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -47,7 +48,24 @@ class AdminKontoController extends Controller
      */
     public function show(Konto $konto) // Route model binding
     {
-        return new KontoResource($konto->load('uzytkownik'));
+        return $konto->load('uzytkownik');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/admin/uzytkownik/{idUzytkownika}",
+     *     summary="Pobiera szczegóły konkretnego użytkownika",
+     *     tags={"Admin-Konta"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="idUzytkownika", in="path", required=true, description="ID konta", @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Szczegóły konta", @OA\JsonContent(ref="#/components/schemas/KontoResource")),
+     *     @OA\Response(response=404, description="Konto nie znalezione"),
+     *     @OA\Response(response=403, description="Brak uprawnień")
+     * )
+     */
+    public function uzytkownik(Uzytkownik $uzytkownik) // Route model binding
+    {
+        return $uzytkownik->load("portfel")->load("konta");
     }
 
     /**

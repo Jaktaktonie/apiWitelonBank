@@ -52,6 +52,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
     // Zarządzanie Kontami Użytkowników
     Route::get('konta', [AdminKontoController::class, 'index'])->name('konta.index'); // WBK-02
     Route::get('konta/{konto}', [AdminKontoController::class, 'show'])->name('konta.show'); // WBK-02
+    Route::get('uzytkownik/{uzytkownik}', [AdminKontoController::class, 'uzytkownik'])->name('konta.show'); // WBK-02
     Route::patch('konta/{konto}/block', [AdminKontoController::class, 'blockAccount'])->name('konta.block'); // WBK-02
     Route::patch('konta/{konto}/unblock', [AdminKontoController::class, 'unblockAccount'])->name('konta.unblock'); // WBK-02
     Route::patch('konta/{konto}/limit', [AdminKontoController::class, 'updateLimit'])->name('konta.limit'); // WBK-02

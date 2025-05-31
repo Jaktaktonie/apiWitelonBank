@@ -105,6 +105,49 @@
                 ]
             }
         },
+        "/api/admin/uzytkownik/{idUzytkownika}": {
+            "get": {
+                "tags": [
+                    "Admin-Konta"
+                ],
+                "summary": "Pobiera szczegóły konkretnego użytkownika",
+                "operationId": "7c55c7df4af1aa934107f693dbed7f25",
+                "parameters": [
+                    {
+                        "name": "idUzytkownika",
+                        "in": "path",
+                        "description": "ID konta",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Szczegóły konta",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KontoResource"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Konto nie znalezione"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/admin/konta/{idKonta}/block": {
             "patch": {
                 "tags": [
@@ -1352,9 +1395,9 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Plik CSV z historią transakcji",
+                        "description": "Plik PDF z historią transakcji",
                         "content": {
-                            "text/csv": {
+                            "text/pdf": {
                                 "schema": {
                                     "type": "string",
                                     "format": "binary"
