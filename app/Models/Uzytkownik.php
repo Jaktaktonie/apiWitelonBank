@@ -73,4 +73,8 @@ class Uzytkownik extends Authenticatable
     {
         return $this->hasMany(ZlecenieStale::class, 'id_uzytkownika');
     }
+    public function zapisaniOdbiorcy()
+    {
+        return $this->hasMany(ZapisanyOdbiorca::class, 'id_uzytkownika');
+    }
 }

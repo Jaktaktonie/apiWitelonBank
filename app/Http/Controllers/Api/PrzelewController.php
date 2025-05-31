@@ -16,6 +16,8 @@ use App\Models\Konto;
 use App\Models\Przelew;
 use App\Http\Resources\PrzelewResource; // Stworzymy go później
 use OpenApi\Attributes as OA;
+use Illuminate\Support\Facades\View; // Dla renderowania widoku
+use Barryvdh\DomPDF\Facade\Pdf; // Fasada dla dompdf
 
 class PrzelewController extends Controller
 {
@@ -323,5 +325,110 @@ class PrzelewController extends Controller
         }
 
         return new PrzelewResource($przelew);
+    }
+    /**
+     * @OA\Get(
+     *     path="/api/konta/{konto}/przelewy/export",
+     *     summary="Eksportuje historię transakcji dla danego konta do pliku CSV",
+     *     tags={"Przelewy"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="konto",
+     *         in="path",
+     *         required=true,
+     *         description="ID konta, dla którego generowany jest raport",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="data_od",
+     *         in="query",
+     *         required=false,
+     *         description="Data początkowa zakresu raportu (YYYY-MM-DD)",
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="data_do",
+     *         in="query",
+     *         required=false,
+     *         description="Data końcowa zakresu raportu (YYYY-MM-DD)",
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="typ",
+     *         in="query",
+     *         required=false,
+     *         description="Filtruj wg typu przelewu ('wychodzacy' lub 'przychodzacy')",
+     *         @OA\Schema(type="string", enum={"wychodzacy", "przychodzacy"})
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Plik PDF z historią transakcji",
+     *         @OA\MediaType(
+     *             mediaType="text/pdf",
+     *             @OA\Schema(type="string", format="binary")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Nieautoryzowany"),
+     *     @OA\Response(response=403, description="Brak uprawnień do tego konta"),
+     *     @OA\Response(response=404, description="Konto nie znalezione"),
+     *     @OA\Response(response=422, description="Błąd walidacji parametrów")
+     * )
+     */
+    public function export(Request $request, Konto $konto): \Illuminate\Http\Response|\Illuminate\Http\JsonResponse // Zmieniony typ zwracany
+    {
+        if (Auth::id() !== $konto->id_uzytkownika) {
+            return response()->json(['message' => 'Brak uprawnień do tego konta.'], 403);
+        }
+
+        $validated = $request->validate([
+            'data_od' => 'nullable|date_format:Y-m-d',
+            'data_do' => 'nullable|date_format:Y-m-d|after_or_equal:data_od',
+            'typ' => ['nullable', 'string', \Illuminate\Validation\Rule::in(['wychodzacy', 'przychodzacy'])],
+        ]);
+
+        $query = Przelew::query();
+        $query->where(function ($q) use ($konto) {
+            $q->where('id_konta_nadawcy', $konto->id)
+                ->orWhere('nr_konta_odbiorcy', $konto->nr_konta);
+        })->with(['kontoNadawcy.uzytkownik']); // kontoNadawcy.uzytkownik dla nazwy nadawcy
+
+        if (!empty($validated['data_od'])) {
+            $query->whereDate('data_realizacji', '>=', $validated['data_od']);
+        }
+        if (!empty($validated['data_do'])) {
+            $query->whereDate('data_realizacji', '<=', $validated['data_do']);
+        }
+        if (!empty($validated['typ'])) {
+            if ($validated['typ'] === 'wychodzacy') {
+                $query->where('id_konta_nadawcy', $konto->id);
+            } elseif ($validated['typ'] === 'przychodzacy') {
+                $query->where('nr_konta_odbiorcy', $konto->nr_konta)
+                    ->where('id_konta_nadawcy', '!=', $konto->id);
+            }
+        }
+
+        $przelewy = $query->orderBy('data_realizacji', 'desc')->get();
+        $konto->load('uzytkownik'); // Upewnij się, że dane użytkownika dla konta są załadowane
+
+        $dataDlaWidoku = [
+            'konto' => $konto,
+            'przelewy' => $przelewy,
+            'data_od' => $validated['data_od'] ?? null,
+            'data_do' => $validated['data_do'] ?? null,
+        ];
+
+        $nazwaPliku = 'historia_transakcji_konto_' . $konto->nr_konta . '_' . now()->format('Ymd_His') . '.pdf';
+
+        // Generowanie PDF
+        // Opcja 1: Załaduj widok i przekaż dane, a następnie pobierz jako PDF
+        $pdf = Pdf::loadView('pdf.historia_transakcji', $dataDlaWidoku);
+        // Możesz ustawić opcje, np. rozmiar papieru i orientację
+        // $pdf->setPaper('A4', 'landscape');
+
+        // Opcja 2: Zwróć jako strumień do pobrania przez przeglądarkę
+        return $pdf->download($nazwaPliku);
+
+        // Opcja 3: Zwróć jako odpowiedź inline (wyświetl w przeglądarce, jeśli obsługuje)
+        // return $pdf->stream($nazwaPliku);
     }
 }

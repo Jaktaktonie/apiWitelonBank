@@ -5,18 +5,6 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @OA\Schema(
- *     schema="PortfelResource",
- *     title="Portfel Kryptowalut Użytkownika",
- *     @OA\Property(property="id", type="integer", example=1),
- *     @OA\Property(property="id_uzytkownika", type="integer", example=1),
- *     @OA\Property(property="saldo_bitcoin", type="string", format="decimal", example="0.50000000"),
- *     @OA\Property(property="saldo_ethereum", type="string", format="decimal", example="2.12345678"),
- *     @OA\Property(property="created_at", type="string", format="date-time"),
- *     @OA\Property(property="updated_at", type="string", format="date-time")
- * )
- */
 class PortfelResource extends JsonResource
 {
 

@@ -524,9 +524,6 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Zakupiono X BTC za Y PLN."
-                                        },
-                                        "portfel": {
-                                            "$ref": "#/components/schemas/PortfelResource"
                                         }
                                     },
                                     "type": "object"
@@ -567,14 +564,7 @@
                 "operationId": "187222d27d38613f116b18b1707b0db2",
                 "responses": {
                     "200": {
-                        "description": "Portfel użytkownika",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PortfelResource"
-                                }
-                            }
-                        }
+                        "description": "Portfel użytkownika"
                     },
                     "404": {
                         "description": "Portfel nie znaleziony (użytkownik jeszcze nie inwestował)",
@@ -1300,6 +1290,333 @@
                     },
                     "404": {
                         "description": "Konto nie znalezione"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/konta/{konto}/przelewy/export": {
+            "get": {
+                "tags": [
+                    "Przelewy"
+                ],
+                "summary": "Eksportuje historię transakcji dla danego konta do pliku CSV",
+                "operationId": "9f0f682349fa14dac6a04b04b7121490",
+                "parameters": [
+                    {
+                        "name": "konto",
+                        "in": "path",
+                        "description": "ID konta, dla którego generowany jest raport",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "data_od",
+                        "in": "query",
+                        "description": "Data początkowa zakresu raportu (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "data_do",
+                        "in": "query",
+                        "description": "Data końcowa zakresu raportu (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "typ",
+                        "in": "query",
+                        "description": "Filtruj wg typu przelewu ('wychodzacy' lub 'przychodzacy')",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "wychodzacy",
+                                "przychodzacy"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Plik CSV z historią transakcji",
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień do tego konta"
+                    },
+                    "404": {
+                        "description": "Konto nie znalezione"
+                    },
+                    "422": {
+                        "description": "Błąd walidacji parametrów"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/zapisani-odbiorcy": {
+            "get": {
+                "tags": [
+                    "Zapisani Odbiorcy"
+                ],
+                "summary": "Pobiera listę zapisanych odbiorców zalogowanego użytkownika",
+                "operationId": "b8f288f1de3bb54be2eb297655521e50",
+                "responses": {
+                    "200": {
+                        "description": "Lista odbiorców",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ZapisanyOdbiorca"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Zapisani Odbiorcy"
+                ],
+                "summary": "Dodaje nowego odbiorcę do listy zapisanych",
+                "operationId": "41d4958efaf7b395212277eca62cb94f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nazwa_odbiorcy_zdefiniowana",
+                                    "nr_konta_odbiorcy"
+                                ],
+                                "properties": {
+                                    "nazwa_odbiorcy_zdefiniowana": {
+                                        "type": "string",
+                                        "example": "Mieszkanie"
+                                    },
+                                    "nr_konta_odbiorcy": {
+                                        "type": "string",
+                                        "example": "PL12345678901234567890123456"
+                                    },
+                                    "rzeczywista_nazwa_odbiorcy": {
+                                        "type": "string",
+                                        "example": "Jan Kowalski Wynajem",
+                                        "nullable": true
+                                    },
+                                    "adres_odbiorcy_linia1": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "adres_odbiorcy_linia2": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Odbiorca dodany",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZapisanyOdbiorca"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Błąd walidacji"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/zapisani-odbiorcy/{zapisany_odbiorca}": {
+            "get": {
+                "tags": [
+                    "Zapisani Odbiorcy"
+                ],
+                "summary": "Pobiera szczegóły zapisanego odbiorcy",
+                "operationId": "8dd36896f2e7fce3eff0ded8ae3c4357",
+                "parameters": [
+                    {
+                        "name": "zapisany_odbiorca",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Szczegóły odbiorcy",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZapisanyOdbiorca"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Brak uprawnień"
+                    },
+                    "404": {
+                        "description": "Nie znaleziono"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Zapisani Odbiorcy"
+                ],
+                "summary": "Aktualizuje zapisanego odbiorcę",
+                "operationId": "9256c8a7d4917a9a0afc1e9e8995abc3",
+                "parameters": [
+                    {
+                        "name": "zapisany_odbiorca",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "nazwa_odbiorcy_zdefiniowana": {
+                                        "type": "string"
+                                    },
+                                    "nr_konta_odbiorcy": {
+                                        "type": "string"
+                                    },
+                                    "rzeczywista_nazwa_odbiorcy": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "adres_odbiorcy_linia1": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "adres_odbiorcy_linia2": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Odbiorca zaktualizowany",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZapisanyOdbiorca"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Brak uprawnień"
+                    },
+                    "404": {
+                        "description": "Nie znaleziono"
+                    },
+                    "422": {
+                        "description": "Błąd walidacji"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Zapisani Odbiorcy"
+                ],
+                "summary": "Usuwa zapisanego odbiorcę",
+                "operationId": "be02d8307c985910c0ef836cdb49ef6e",
+                "parameters": [
+                    {
+                        "name": "zapisany_odbiorca",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Odbiorca usunięty"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień"
+                    },
+                    "404": {
+                        "description": "Nie znaleziono"
                     }
                 },
                 "security": [
@@ -2410,38 +2727,6 @@
                 },
                 "type": "object"
             },
-            "PortfelResource": {
-                "title": "Portfel Kryptowalut Użytkownika",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "id_uzytkownika": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "saldo_bitcoin": {
-                        "type": "string",
-                        "format": "decimal",
-                        "example": "0.50000000"
-                    },
-                    "saldo_ethereum": {
-                        "type": "string",
-                        "format": "decimal",
-                        "example": "2.12345678"
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                },
-                "type": "object"
-            },
             "Karta": {
                 "title": "Karta Płatnicza",
                 "description": "Model karty płatniczej",
@@ -2487,6 +2772,39 @@
                     },
                     "updated_at": {
                         "description": "Data ostatniej modyfikacji",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "ZapisanyOdbiorca": {
+                "title": "Zapisany Odbiorca",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "id_uzytkownika": {
+                        "type": "integer"
+                    },
+                    "nazwa_odbiorcy_zdefiniowana": {
+                        "description": "Nazwa odbiorcy nadana przez użytkownika",
+                        "type": "string"
+                    },
+                    "nr_konta_odbiorcy": {
+                        "description": "Numer konta odbiorcy",
+                        "type": "string"
+                    },
+                    "rzeczywista_nazwa_odbiorcy": {
+                        "description": "Rzeczywista nazwa odbiorcy (jeśli znana)",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
                         "type": "string",
                         "format": "date-time"
                     }
@@ -2597,6 +2915,10 @@
         {
             "name": "Karty Płatnicze",
             "description": "Operacje związane z kartami płatniczymi użytkownika"
+        },
+        {
+            "name": "Zapisani Odbiorcy",
+            "description": "Zarządzanie listą zapisanych odbiorców przelewów"
         },
         {
             "name": "Zlecenia Stałe",

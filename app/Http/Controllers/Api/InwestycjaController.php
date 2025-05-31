@@ -141,7 +141,6 @@ class InwestycjaController extends Controller
      *         description="Kryptowaluta zakupiona pomyślnie",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Zakupiono X BTC za Y PLN."),
-     *             @OA\Property(property="portfel", ref="#/components/schemas/PortfelResource")
      *         )
      *     ),
      *     @OA\Response(response=422, description="Błąd walidacji lub niewystarczające środki", @OA\JsonContent(ref="#/components/schemas/ErrorValidation")),
@@ -248,7 +247,6 @@ class InwestycjaController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="Portfel użytkownika",
-     *         @OA\JsonContent(ref="#/components/schemas/PortfelResource")
      *     ),
      *     @OA\Response(
      *         response=404,

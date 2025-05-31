@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\Admin\AdminPrzelewController;
 use App\Http\Controllers\Api\Admin\AdminRaportController;
 use App\Http\Controllers\Api\KartaController;
 use App\Http\Controllers\Api\PrzelewController;
+use App\Http\Controllers\Api\ZapisanyOdbiorcaController;
 use App\Http\Controllers\UzytkownikController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -68,7 +69,7 @@ use App\Http\Controllers\Api\InwestycjaController;
 Route::middleware('auth:sanctum')->group(function () {
     // ... inne trasy chronione ...
     Route::get('/konta/{konto}/przelewy', [PrzelewController::class, 'indexForAccount']); // Pamiętaj, że masz to
-
+    Route::get('konta/{konto}/przelewy/export', [PrzelewController::class, 'export'])->name('przelewy.exportForKonto');
     // Inwestycje
     Route::get('/kryptowaluty/ceny', [InwestycjaController::class, 'pobierzCeny'])->name('krypto.ceny');
     Route::post('/inwestycje/kup', [InwestycjaController::class, 'kup'])->name('inwestycje.kup');
@@ -101,4 +102,9 @@ Route::middleware('auth:sanctum')->group(function () {
         'zlecenia-stale' => 'zlecenie_stale' // Zmiana nazwy parametru dla route model binding
     ]);
 });
-
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/zapisani-odbiorcy/{zapisany_odbiorca}', [ZapisanyOdbiorcaController::class, 'show']); // Pobiera szczegóły konkretnego konta (z Route Model Binding)
+    Route::put('/zapisani-odbiorcy/{zapisany_odbiorca}', [ZapisanyOdbiorcaController::class, 'update']); // Pobiera szczegóły konkretnego konta (z Route Model Binding)
+    Route::delete('/zapisani-odbiorcy/{zapisany_odbiorca}', [ZapisanyOdbiorcaController::class, 'destroy']); // Pobiera szczegóły konkretnego konta (z Route Model Binding)
+    Route::apiResource('zapisani-odbiorcy', ZapisanyOdbiorcaController::class);
+});

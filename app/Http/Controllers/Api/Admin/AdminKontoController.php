@@ -30,7 +30,7 @@ class AdminKontoController extends Controller
     public function index()
     {
         $konta = Konto::with('uzytkownik')->paginate(15); // Paginacja dla wydajności
-        return KontoResource::collection($konta);
+        return $konta;
     }
 
     /**

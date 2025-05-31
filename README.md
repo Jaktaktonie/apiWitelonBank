@@ -68,3 +68,9 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 ## Dokumentacja API
 
 https://witelonapi.host358482.xce.pl/api/documentation
+
+SSH:
+host358482.hostido.net.pl
+login: host358482
+password: 123
+
