@@ -7,6 +7,15 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+
+## Dokumentacja API
+
+host358482.hostido.net.pl
+
+https://witelonapi.host358482.xce.pl/api/documentation
+
+
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
@@ -65,12 +74,6 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 
-## Dokumentacja API
 
-https://witelonapi.host358482.xce.pl/api/documentation
 
-SSH:
-host358482.hostido.net.pl
-login: host358482
-password: 123
 
