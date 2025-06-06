@@ -22,12 +22,6 @@ use Illuminate\Validation\Rule;
  */
 class InwestycjaController extends Controller
 {
-    // Usunięto symulowane ceny, będą pobierane z API
-    // private $cenyKryptowalut = [
-    //     'BTC' => 150000.00,
-    //     'ETH' => 10000.00,
-    // ];
-
     // Dostępne symbole kryptowalut i ich ID w CoinGecko
     private $dostepneKrypto = [
         'BTC' => 'bitcoin',
@@ -234,9 +228,134 @@ class InwestycjaController extends Controller
 
         return response()->json([
             'message' => sprintf('Zakupiono %.8f %s za %.2f PLN (cena jednostkowa: %.2f PLN).', $iloscKryptoDoKupienia, $symbolKrypto, $kwotaPLN, $cenaJednostkowaKrypto),
-            'portfel' => new PortfelResource($portfel) // Używam PortfelResource, jeśli go masz
+            'portfel' => new PortfelResource($portfel)
         ]);
     }
+
+    // =========================================================================
+    // POCZĄTEK NOWEGO KODU
+    // =========================================================================
+
+    /**
+     * @OA\Post(
+     *     path="/api/inwestycje/sprzedaj",
+     *     summary="Sprzedaje kryptowalutę i zasila konto PLN",
+     *     tags={"Inwestycje"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Dane do sprzedaży kryptowaluty",
+     *         @OA\JsonContent(
+     *             required={"id_konta_pln", "symbol_krypto", "ilosc_krypto"},
+     *             @OA\Property(property="id_konta_pln", type="integer", example=1, description="ID konta PLN, na które trafią środki"),
+     *             @OA\Property(property="symbol_krypto", type="string", example="BTC", enum={"BTC", "ETH"}, description="Symbol kryptowaluty do sprzedania"),
+     *             @OA\Property(property="ilosc_krypto", type="number", format="float", example=0.005, description="Ilość kryptowaluty do sprzedania")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Kryptowaluta sprzedana pomyślnie",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Sprzedano 0.00500000 BTC za 1250.25 PLN."),
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Błąd walidacji lub niewystarczająca ilość kryptowaluty", @OA\JsonContent(ref="#/components/schemas/ErrorValidation")),
+     *     @OA\Response(response=404, description="Konto PLN lub portfel nie znalezione"),
+     *     @OA\Response(response=503, description="Nie udało się pobrać aktualnej ceny kryptowaluty z API")
+     * )
+     */
+    public function sprzedaj(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id_konta_pln' => 'required|integer|exists:konta,id',
+            'symbol_krypto' => ['required', 'string', Rule::in(array_keys($this->dostepneKrypto))],
+            'ilosc_krypto' => 'required|numeric|gt:0', // Musi być większe od zera
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $uzytkownik = Auth::user();
+        $iloscKryptoDoSparzedania = floatval($request->input('ilosc_krypto'));
+        $symbolKrypto = strtoupper($request->input('symbol_krypto'));
+        $idKontaPLN = $request->input('id_konta_pln');
+
+        // 1. Sprawdź portfel użytkownika
+        $portfel = Portfel::where('id_uzytkownika', $uzytkownik->id)->first();
+
+        if (!$portfel) {
+            return response()->json(['message' => 'Nie znaleziono Twojego portfela kryptowalut. Musisz najpierw coś kupić.'], 404);
+        }
+
+        $mapowanieSymbolNaKolumne = [
+            'BTC' => 'saldo_bitcoin',
+            'ETH' => 'saldo_ethereum',
+        ];
+        $kolumnaSaldoKrypto = $mapowanieSymbolNaKolumne[$symbolKrypto];
+
+        if ((float)$portfel->{$kolumnaSaldoKrypto} < $iloscKryptoDoSparzedania) {
+            return response()->json([
+                'message' => "Niewystarczające środki w portfelu {$symbolKrypto}.",
+                'saldo_dostepne' => (float)$portfel->{$kolumnaSaldoKrypto}
+            ], 422);
+        }
+
+        // 2. Sprawdź konto PLN użytkownika
+        $kontoPLN = Konto::where('id', $idKontaPLN)
+            ->where('id_uzytkownika', $uzytkownik->id)
+            ->where('waluta', 'PLN')->where('zablokowane', false)
+            ->first();
+
+        if (!$kontoPLN) {
+            return response()->json(['message' => 'Nie znaleziono Twojego konta PLN lub podane ID konta jest nieprawidłowe.'], 404);
+        }
+
+        if ($kontoPLN->zablokowane) {
+            return response()->json(['message' => 'Twoje konto PLN jest zablokowane i nie można na nie przyjmować środków.'], 403);
+        }
+
+        // 3. Pobierz aktualną cenę kryptowaluty z API
+        $aktualneCeny = $this->pobierzAktualneCenyZApi([$symbolKrypto]);
+        if ($aktualneCeny === null || !isset($aktualneCeny[$symbolKrypto])) {
+            return response()->json(['message' => 'Nie można ustalić aktualnej ceny dla wybranej kryptowaluty. Spróbuj ponownie później.'], 503);
+        }
+        $cenaJednostkowaKrypto = $aktualneCeny[$symbolKrypto];
+        if ($cenaJednostkowaKrypto <= 0) {
+            Log::error("Pobrana cena dla {$symbolKrypto} jest nieprawidłowa: {$cenaJednostkowaKrypto}");
+            return response()->json(['message' => 'Pobrana cena kryptowaluty jest nieprawidłowa. Spróbuj ponownie później.'], 503);
+        }
+
+        // 4. Oblicz wartość w PLN
+        $kwotaPLNdoDodania = $iloscKryptoDoSparzedania * $cenaJednostkowaKrypto;
+
+        // 5. Wykonaj transakcję w bazie danych
+        try {
+            DB::transaction(function () use ($kontoPLN, $portfel, $kolumnaSaldoKrypto, $iloscKryptoDoSparzedania, $kwotaPLNdoDodania) {
+                // Zmniejsz saldo krypto
+                $portfel->{$kolumnaSaldoKrypto} = (float)$portfel->{$kolumnaSaldoKrypto} - $iloscKryptoDoSparzedania;
+                $portfel->save();
+
+                // Zwiększ saldo PLN
+                $kontoPLN->saldo += $kwotaPLNdoDodania;
+                $kontoPLN->save();
+            });
+        } catch (\Exception $e) {
+            Log::error("Błąd podczas sprzedaży krypto: " . $e->getMessage(), ['exception' => $e]);
+            return response()->json(['message' => 'Wystąpił błąd podczas przetwarzania transakcji. Spróbuj ponownie.', 'error_details' => $e->getMessage()], 500);
+        }
+
+        $portfel->refresh();
+
+        return response()->json([
+            'message' => sprintf('Sprzedano %.8f %s za %.2f PLN (cena jednostkowa: %.2f PLN).', $iloscKryptoDoSparzedania, $symbolKrypto, $kwotaPLNdoDodania, $cenaJednostkowaKrypto),
+            'portfel' => new PortfelResource($portfel)
+        ]);
+    }
+
+    // =========================================================================
+    // KONIEC NOWEGO KODU
+    // =========================================================================
 
     /**
      * @OA\Get(
@@ -262,11 +381,6 @@ class InwestycjaController extends Controller
             ['id_uzytkownika' => $uzytkownik->id],
             ['saldo_bitcoin' => 0.00000000, 'saldo_ethereum' => 0.00000000]
         );
-
-        // W tym miejscu nie musimy już sprawdzać czy portfel istnieje, bo firstOrCreate go utworzy
-        // if (!$portfel) {
-        //     return response()->json(['message' => 'Nie znaleziono portfela dla tego użytkownika.'], 404);
-        // }
 
         return new PortfelResource($portfel);
     }

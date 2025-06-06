@@ -158,7 +158,7 @@ class ZlecenieStaleController extends Controller
     /**
      * @OA\Delete(
      *     path="/api/zlecenia-stale/{zlecenie_stale}",
-     *     summary="Usuwa (lub dezaktywuje) zlecenie stałe",
+     *     summary="Usuwa zlecenie stałe",
      *     tags={"Zlecenia Stałe"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
@@ -170,12 +170,11 @@ class ZlecenieStaleController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Zlecenie usunięte/dezaktywowane pomyślnie",
+     *         description="Zlecenie usunięte pomyślnie",
      *         @OA\JsonContent(
      *              @OA\Property(property="message", type="string", example="Zlecenie stałe zostało pomyślnie dezaktywowane.")
      *          )
      *     ),
-     *     @OA\Response(response=204, description="Zlecenie usunięte pomyślnie (jeśli usuwamy fizycznie)"),
      *     @OA\Response(response=401, description="Nieautoryzowany"),
      *     @OA\Response(response=403, description="Brak uprawnień"),
      *     @OA\Response(response=404, description="Zlecenie nie znalezione")
@@ -187,10 +186,8 @@ class ZlecenieStaleController extends Controller
             return response()->json(['message' => 'Brak uprawnień do tego zasobu.'], 403);
         }
 
-        // Zamiast fizycznego usuwania, lepiej dezaktywować
-        $zlecenie_stale->update(['aktywne' => false]);
-        // lub $zlecenie_stale->delete(); jeśli chcesz fizycznie usunąć
+        $zlecenie_stale->delete();
 
-        return response()->json(['message' => 'Zlecenie stałe zostało pomyślnie dezaktywowane.']); // Lub 204 jeśli delete()
+        return response()->json(['message' => 'Zlecenie stałe zostało pomyślnie ususunięte.']);
     }
 }

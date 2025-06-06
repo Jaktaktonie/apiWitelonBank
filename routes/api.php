@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Admin\AdminKontoController;
 use App\Http\Controllers\Api\Admin\AdminPrzelewController;
 use App\Http\Controllers\Api\Admin\AdminRaportController;
+use App\Http\Controllers\Api\Admin\AdminStatyController;
 use App\Http\Controllers\Api\KartaController;
 use App\Http\Controllers\Api\PrzelewController;
 use App\Http\Controllers\Api\ZapisanyOdbiorcaController;
@@ -59,9 +60,11 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
 
     // Monitorowanie Transakcji (Przelewów)
     Route::get('przelewy', [AdminPrzelewController::class, 'index'])->name('przelewy.index'); // WBK-03
+    Route::get('przelewy/{idKonta}', [AdminPrzelewController::class, 'przelewy_konta'])->name('przelewy.przelewy_konta'); // WBK-03
 
     // Generowanie Raportów Finansowych
     Route::get('raporty/przelewy', [AdminRaportController::class, 'financialTransfersReport'])->name('raporty.przelewy'); // WBK-04
+    Route::get('statystyki', [AdminStatyController::class, 'getSystemStatistics'])->name('statystyki'); // WBK-05
 });
 
 use App\Http\Controllers\Api\InwestycjaController;
@@ -74,6 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Inwestycje
     Route::get('/kryptowaluty/ceny', [InwestycjaController::class, 'pobierzCeny'])->name('krypto.ceny');
     Route::post('/inwestycje/kup', [InwestycjaController::class, 'kup'])->name('inwestycje.kup');
+    Route::post('/inwestycje/sprzedaj', [InwestycjaController::class, 'sprzedaj'])->name('inwestycje.sprzedaj');
 
     Route::get('/portfel', [InwestycjaController::class, 'pobierzMojPortfel'])->name('portfel.show');
 });

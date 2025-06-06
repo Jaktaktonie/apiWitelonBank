@@ -365,6 +365,88 @@
                 ]
             }
         },
+        "/api/admin/przelewy/{idKonta}": {
+            "get": {
+                "tags": [
+                    "Admin-Przelewy"
+                ],
+                "summary": "Pobiera historię przelewów dla danego konta",
+                "operationId": "f863aed055dc9459ac3c5af55cf3beb5",
+                "parameters": [
+                    {
+                        "name": "idKonta",
+                        "in": "path",
+                        "description": "ID konta",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "typ",
+                        "in": "query",
+                        "description": "Filtruj wg typu: 'wychodzace', 'przychodzace'",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "wychodzace",
+                                "przychodzace"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "strona",
+                        "in": "query",
+                        "description": "Numer strony dla paginacji",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "na_strone",
+                        "in": "query",
+                        "description": "Liczba wyników na stronę",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista przelewów",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PrzelewResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień do tego konta"
+                    },
+                    "404": {
+                        "description": "Konto nie znalezione"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/admin/raporty/przelewy": {
             "get": {
                 "tags": [
@@ -457,6 +539,324 @@
                     },
                     "403": {
                         "description": "Brak uprawnień"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/statystyki": {
+            "get": {
+                "tags": [
+                    "Admin-Statystyki"
+                ],
+                "summary": "Pobiera kompleksowe statystyki systemowe",
+                "description": "Zwraca różnorodne statystyki dotyczące użytkowników, kont, transakcji, kryptowalut itp. Wymaga uprawnień administratora. Klucze w odpowiedzi są w języku polskim bez znaków diakrytycznych.",
+                "operationId": "getSystemStatistics",
+                "responses": {
+                    "200": {
+                        "description": "Pomyślnie pobrano statystyki",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "uzytkownicy": {
+                                            "description": "Statystyki użytkowników",
+                                            "properties": {
+                                                "calkowita_liczba": {
+                                                    "description": "Całkowita liczba użytkowników",
+                                                    "type": "integer",
+                                                    "example": 150
+                                                },
+                                                "liczba_zweryfikowanych": {
+                                                    "description": "Liczba zweryfikowanych użytkowników",
+                                                    "type": "integer",
+                                                    "example": 120
+                                                },
+                                                "liczba_administratorow": {
+                                                    "description": "Liczba administratorów",
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "nowi_uzytkownicy_ostatnie_30_dni": {
+                                                    "description": "Liczba nowych użytkowników w ciągu ostatnich 30 dni",
+                                                    "type": "integer",
+                                                    "example": 15
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "konta_bankowe": {
+                                            "description": "Statystyki kont bankowych",
+                                            "properties": {
+                                                "calkowita_liczba": {
+                                                    "description": "Całkowita liczba kont bankowych",
+                                                    "type": "integer",
+                                                    "example": 200
+                                                },
+                                                "podsumowanie_sald_wg_waluty": {
+                                                    "description": "Podsumowanie sald na kontach według waluty",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "waluta": {
+                                                                "description": "Kod waluty",
+                                                                "type": "string",
+                                                                "example": "PLN"
+                                                            },
+                                                            "calkowita_kwota": {
+                                                                "description": "Całkowita suma sald w danej walucie",
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 1250000.75
+                                                            },
+                                                            "liczba_kont": {
+                                                                "description": "Liczba kont w danej walucie",
+                                                                "type": "integer",
+                                                                "example": 180
+                                                            },
+                                                            "srednia_kwota": {
+                                                                "description": "Średnie saldo na koncie dla danej waluty",
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 6944.45
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "liczba_zablokowanych_kont": {
+                                                    "description": "Liczba zablokowanych kont",
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "liczba_kont_z_limitem_przelewu": {
+                                                    "description": "Liczba kont z ustawionym limitem przelewu (>0)",
+                                                    "type": "integer",
+                                                    "example": 50
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "karty_platnicze": {
+                                            "description": "Statystyki kart płatniczych",
+                                            "properties": {
+                                                "calkowita_liczba": {
+                                                    "description": "Całkowita liczba kart",
+                                                    "type": "integer",
+                                                    "example": 180
+                                                },
+                                                "liczba_zablokowanych_kart": {
+                                                    "description": "Liczba zablokowanych kart",
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "liczba_aktywne_zblizeniowe": {
+                                                    "description": "Liczba kart z aktywnymi płatnościami zbliżeniowymi",
+                                                    "type": "integer",
+                                                    "example": 150
+                                                },
+                                                "liczba_aktywne_internetowe": {
+                                                    "description": "Liczba kart z aktywnymi płatnościami internetowymi",
+                                                    "type": "integer",
+                                                    "example": 160
+                                                },
+                                                "liczba_wg_typu": {
+                                                    "description": "Liczba kart według typu",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "typ": {
+                                                                "description": "Typ karty (może być null)",
+                                                                "type": "string",
+                                                                "example": "Visa Debit",
+                                                                "nullable": true
+                                                            },
+                                                            "liczba": {
+                                                                "description": "Liczba kart danego typu",
+                                                                "type": "integer",
+                                                                "example": 100
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "przelewy": {
+                                            "description": "Statystyki przelewów",
+                                            "properties": {
+                                                "calkowita_liczba": {
+                                                    "description": "Całkowita liczba zarejestrowanych przelewów",
+                                                    "type": "integer",
+                                                    "example": 5000
+                                                },
+                                                "podsumowanie_kwot_wg_waluty": {
+                                                    "description": "Podsumowanie kwot przelewów według waluty",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "waluta": {
+                                                                "description": "Waluta przelewu",
+                                                                "type": "string",
+                                                                "example": "PLN"
+                                                            },
+                                                            "calkowita_kwota": {
+                                                                "description": "Całkowita suma kwot przelewów w danej walucie",
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 850000
+                                                            },
+                                                            "liczba_przelewow": {
+                                                                "description": "Liczba przelewów w danej walucie",
+                                                                "type": "integer",
+                                                                "example": 4500
+                                                            },
+                                                            "srednia_kwota": {
+                                                                "description": "Średnia kwota przelewu dla danej waluty",
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 188.89
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "liczba_wg_statusu": {
+                                                    "description": "Liczba przelewów według statusu",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "status": {
+                                                                "description": "Status przelewu",
+                                                                "type": "string",
+                                                                "example": "zrealizowany"
+                                                            },
+                                                            "liczba": {
+                                                                "description": "Liczba przelewów o danym statusie",
+                                                                "type": "integer",
+                                                                "example": 4800
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "przelewy_ostatnie_24_godziny": {
+                                                    "description": "Liczba przelewów zleconych w ciągu ostatnich 24 godzin",
+                                                    "type": "integer",
+                                                    "example": 50
+                                                },
+                                                "przelewy_ostatnie_7_dni": {
+                                                    "description": "Liczba przelewów zleconych w ciągu ostatnich 7 dni",
+                                                    "type": "integer",
+                                                    "example": 300
+                                                },
+                                                "przelewy_ostatnie_30_dni": {
+                                                    "description": "Liczba przelewów zleconych w ciągu ostatnich 30 dni",
+                                                    "type": "integer",
+                                                    "example": 1200
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "zlecenia_stale": {
+                                            "description": "Statystyki zleceń stałych",
+                                            "properties": {
+                                                "calkowita_liczba": {
+                                                    "description": "Całkowita liczba zleceń stałych",
+                                                    "type": "integer",
+                                                    "example": 50
+                                                },
+                                                "liczba_aktywnych": {
+                                                    "description": "Liczba aktywnych zleceń stałych",
+                                                    "type": "integer",
+                                                    "example": 40
+                                                },
+                                                "suma_kwot_aktywnych_wg_waluty": {
+                                                    "description": "Suma kwot aktywnych zleceń stałych według waluty konta źródłowego",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "waluta": {
+                                                                "description": "Waluta konta źródłowego zlecenia",
+                                                                "type": "string",
+                                                                "example": "PLN"
+                                                            },
+                                                            "calkowita_kwota": {
+                                                                "description": "Suma kwot aktywnych zleceń w danej walucie",
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 12000
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "liczba_wg_czestotliwosci": {
+                                                    "description": "Liczba zleceń stałych według częstotliwości",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "czestotliwosc": {
+                                                                "description": "Częstotliwość wykonywania",
+                                                                "type": "string",
+                                                                "example": "miesiecznie"
+                                                            },
+                                                            "liczba": {
+                                                                "description": "Liczba zleceń o danej częstotliwości",
+                                                                "type": "integer",
+                                                                "example": 30
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "portfele_kryptowalut": {
+                                            "description": "Statystyki portfeli kryptowalutowych",
+                                            "properties": {
+                                                "calkowita_liczba_portfeli": {
+                                                    "description": "Całkowita liczba utworzonych portfeli (rekordów w tabeli)",
+                                                    "type": "integer",
+                                                    "example": 30
+                                                },
+                                                "liczba_uzytkownikow_z_portfelami": {
+                                                    "description": "Liczba unikalnych użytkowników posiadających jakikolwiek portfel krypto",
+                                                    "type": "integer",
+                                                    "example": 28
+                                                },
+                                                "calkowita_suma_bitcoin": {
+                                                    "description": "Całkowita suma Bitcoinów na wszystkich portfelach",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 5.12345678
+                                                },
+                                                "calkowita_suma_ethereum": {
+                                                    "description": "Całkowita suma Ethereum na wszystkich portfelach",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 102.87654321
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Nieautoryzowany dostęp (brak lub nieprawidłowy token)"
+                    },
+                    "403": {
+                        "description": "Brak uprawnień (użytkownik nie jest administratorem)"
                     }
                 },
                 "security": [
@@ -576,6 +976,92 @@
                     },
                     "422": {
                         "description": "Błąd walidacji lub niewystarczające środki",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorValidation"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Konto PLN lub portfel nie znalezione"
+                    },
+                    "503": {
+                        "description": "Nie udało się pobrać aktualnej ceny kryptowaluty z API"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/inwestycje/sprzedaj": {
+            "post": {
+                "tags": [
+                    "Inwestycje"
+                ],
+                "summary": "Sprzedaje kryptowalutę i zasila konto PLN",
+                "operationId": "20d203ad08853bde3765a612f0bf0582",
+                "requestBody": {
+                    "description": "Dane do sprzedaży kryptowaluty",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id_konta_pln",
+                                    "symbol_krypto",
+                                    "ilosc_krypto"
+                                ],
+                                "properties": {
+                                    "id_konta_pln": {
+                                        "description": "ID konta PLN, na które trafią środki",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "symbol_krypto": {
+                                        "description": "Symbol kryptowaluty do sprzedania",
+                                        "type": "string",
+                                        "enum": [
+                                            "BTC",
+                                            "ETH"
+                                        ],
+                                        "example": "BTC"
+                                    },
+                                    "ilosc_krypto": {
+                                        "description": "Ilość kryptowaluty do sprzedania",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 0.005
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Kryptowaluta sprzedana pomyślnie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Sprzedano 0.00500000 BTC za 1250.25 PLN."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Błąd walidacji lub niewystarczająca ilość kryptowaluty",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1852,7 +2338,7 @@
                 "tags": [
                     "Zlecenia Stałe"
                 ],
-                "summary": "Usuwa (lub dezaktywuje) zlecenie stałe",
+                "summary": "Usuwa zlecenie stałe",
                 "operationId": "38c9d96adfcfe5879d153e35ea005942",
                 "parameters": [
                     {
@@ -1867,7 +2353,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Zlecenie usunięte/dezaktywowane pomyślnie",
+                        "description": "Zlecenie usunięte pomyślnie",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1881,9 +2367,6 @@
                                 }
                             }
                         }
-                    },
-                    "204": {
-                        "description": "Zlecenie usunięte pomyślnie (jeśli usuwamy fizycznie)"
                     },
                     "401": {
                         "description": "Nieautoryzowany"
@@ -2950,6 +3433,10 @@
         {
             "name": "Admin-Raporty",
             "description": "Generowanie raportów przez administratora (WBK-04)"
+        },
+        {
+            "name": "Admin-Statystyki",
+            "description": "Sprawdzanie statystyk systemowych (WBK-05)"
         },
         {
             "name": "Inwestycje",
