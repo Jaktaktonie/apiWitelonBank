@@ -42,7 +42,6 @@ class KontoController extends Controller
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="nr_konta", type="string", example="PL12345678901234567890123456"),
      *                 @OA\Property(property="saldo", type="number", format="float", example=1500.75),
-     *                 @OA\Property(property="waluta", type="string", example="PLN")
      *             )
      *         )
      *     ),
@@ -53,10 +52,6 @@ class KontoController extends Controller
     {
         $user = $request->user(); // lub Auth::user();
         $konta = $user->konta()->select(['id', 'nr_konta', 'saldo'])->get(); // Wybierz tylko potrzebne kolumny
-
-        // Możesz chcieć dodać walutę lub inne informacje
-        // np. jeśli masz pole waluta w tabeli konta:
-        // $konta = $user->konta()->select(['id', 'nr_konta', 'saldo', 'waluta'])->get();
 
         return response()->json($konta);
     }
@@ -98,7 +93,6 @@ class KontoController extends Controller
             return response()->json(['message' => 'Brak uprawnień do tego konta.'], 403);
         }
 
-        // Zwróć tylko potrzebne dane, np. używając $konto->only([...]) lub Resource API
         return response()->json($konto);
     }
 
@@ -143,7 +137,6 @@ class KontoController extends Controller
         $token = Str::random(60);
         $konto->token_zamkniecia = $token;
         $konto->token_zamkniecia_wygasa_o = Carbon::now()->addHours(24);
-        // $konto->oczekuje_na_zamkniecie = true; // Jeśli używasz tej flagi
         $konto->save();
 
         // Generowanie linku - upewnij się, że APP_URL w .env jest poprawnie ustawiony
@@ -201,21 +194,12 @@ class KontoController extends Controller
         }
 
         // Faktyczne zamknięcie konta
-        // Tutaj decydujesz, co oznacza "zamknięcie"
-        // Najprościej: ustawić flagę `zablokowane` na true i wyczyścić tokeny
         $konto->zablokowane = true; // Traktujemy 'zablokowane' jako 'zamknięte'
         $konto->nr_konta = $konto->nr_konta . ' _zamknięte';
         $konto->token_zamkniecia = null;
         $konto->token_zamkniecia_wygasa_o = null;
         // $konto->oczekuje_na_zamkniecie = false; // Jeśli używasz tej flagi
         $konto->save();
-
-        // Można tutaj dodać logikę dezaktywacji powiązanych kart, zleceń stałych itp.
-        // Np. $konto->karty()->update(['zablokowana' => true]);
-        // Np. $konto->zleceniaStaleZrodlowe()->update(['aktywne' => false]);
-
-        // Opcjonalnie: Wysłanie emaila informującego o pomyślnym zamknięciu konta
-        // Mail::to($konto->uzytkownik->email)->send(new KontoZamknieteMail($konto));
 
         Log::info("Konto ID: {$konto->id} zostało pomyślnie zamknięte przez użytkownika ID: {$konto->id_uzytkownika}.");
         return response()->json(['message' => 'Twoje konto zostało pomyślnie zamknięte.']);

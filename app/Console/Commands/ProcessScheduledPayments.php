@@ -27,7 +27,7 @@ class ProcessScheduledPayments extends Command
         $zleceniaDoWykonania = ZlecenieStale::where('aktywne', true)
             ->whereNotNull('data_nastepnego_wykonania')
             ->whereDate('data_nastepnego_wykonania', '<=', $dzisiaj)
-            ->with('kontoZrodlowe') // Eager load dla wydajności
+            ->with('kontoZrodlowe')
             ->get();
 
         if ($zleceniaDoWykonania->isEmpty()) {

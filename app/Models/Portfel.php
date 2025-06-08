@@ -23,8 +23,6 @@ class Portfel extends Model
     protected $casts = [
         'saldo_bitcoin' => 'decimal:8', // Precyzja dla kryptowalut, np. 8 miejsc po przecinku
         'saldo_ethereum' => 'decimal:8',
-        // 'saldo_cardano' => 'decimal:8',
-        // 'saldo_solana' => 'decimal:8',
     ];
 
     /**

@@ -105,7 +105,6 @@ class Karta extends Model
         return $this->belongsTo(Konto::class, 'id_konta');
     }
 
-    // Możesz dodać metody pomocnicze, np.:
     public function zablokuj(): bool
     {
         return $this->update(['zablokowana' => true]);

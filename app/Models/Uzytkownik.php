@@ -34,7 +34,7 @@ class Uzytkownik extends Authenticatable
     protected $casts = [
         'weryfikacja' => 'boolean',
         'administrator' => 'boolean',
-        'dwuetapowy_kod_wygasa_o' => 'datetime', // Dodane
+        'dwuetapowy_kod_wygasa_o' => 'datetime',
     ];
 
     public function getAuthPassword()

@@ -452,7 +452,7 @@
                 "tags": [
                     "Admin-Raporty"
                 ],
-                "summary": "Generuje raport finansowy dotyczący przelewów",
+                "summary": "Generuje raport finansowy dotyczący przelewów w formacie PDF",
                 "operationId": "412143bd5bf6e05c6a11d9a70323f013",
                 "parameters": [
                     {
@@ -487,52 +487,12 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Raport finansowy",
+                        "description": "Raport finansowy w formacie PDF",
                         "content": {
-                            "application/json": {
+                            "application/pdf": {
                                 "schema": {
-                                    "properties": {
-                                        "okres_od": {
-                                            "type": "string",
-                                            "format": "date"
-                                        },
-                                        "okres_do": {
-                                            "type": "string",
-                                            "format": "date"
-                                        },
-                                        "liczba_wszystkich_przelewow": {
-                                            "type": "integer"
-                                        },
-                                        "suma_wszystkich_przelewow": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "description": "Suma kwot dla danej waluty",
-                                                "type": "number",
-                                                "format": "float"
-                                            }
-                                        },
-                                        "liczba_przelewow_zrealizowanych": {
-                                            "type": "integer"
-                                        },
-                                        "suma_przelewow_zrealizowanych": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "number",
-                                                "format": "float"
-                                            }
-                                        },
-                                        "liczba_przelewow_oczekujacych": {
-                                            "type": "integer"
-                                        },
-                                        "suma_przelewow_oczekujacych": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "number",
-                                                "format": "float"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
+                                    "type": "string",
+                                    "format": "binary"
                                 }
                             }
                         }
@@ -1476,10 +1436,6 @@
                                                 "type": "number",
                                                 "format": "float",
                                                 "example": 1500.75
-                                            },
-                                            "waluta": {
-                                                "type": "string",
-                                                "example": "PLN"
                                             }
                                         },
                                         "type": "object"
