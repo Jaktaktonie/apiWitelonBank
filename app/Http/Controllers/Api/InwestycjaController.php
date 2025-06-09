@@ -9,8 +9,12 @@ use App\Models\Portfel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http; // << Importuj klienta HTTP
-use Illuminate\Support\Facades\Log;   // << Importuj Log do logowania błędów
+use Illuminate\Support\Facades\Http;
+
+// << Importuj klienta HTTP
+use Illuminate\Support\Facades\Log;
+
+// << Importuj Log do logowania błędów
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -66,7 +70,7 @@ class InwestycjaController extends Controller
                 // Mapowanie z powrotem na nasze symbole (BTC, ETH)
                 foreach ($this->dostepneKrypto as $symbolNaszejAplikacji => $idCoinGecko) {
                     if (isset($daneApi[$idCoinGecko]['pln'])) {
-                        $ceny[$symbolNaszejAplikacji] = (float) $daneApi[$idCoinGecko]['pln'];
+                        $ceny[$symbolNaszejAplikacji] = (float)$daneApi[$idCoinGecko]['pln'];
                     }
                 }
                 return $ceny;
@@ -215,7 +219,7 @@ class InwestycjaController extends Controller
                 }
 
                 $kolumnaSaldoKrypto = $mapowanieSymbolNaKolumne[$symbolKrypto];
-                $biezaceSaldoKrypto = (float) $portfel->{$kolumnaSaldoKrypto};
+                $biezaceSaldoKrypto = (float)$portfel->{$kolumnaSaldoKrypto};
                 $portfel->{$kolumnaSaldoKrypto} = $biezaceSaldoKrypto + $iloscKryptoDoKupienia;
                 $portfel->save();
             });
@@ -231,10 +235,6 @@ class InwestycjaController extends Controller
             'portfel' => new PortfelResource($portfel)
         ]);
     }
-
-    // =========================================================================
-    // POCZĄTEK NOWEGO KODU
-    // =========================================================================
 
     /**
      * @OA\Post(
@@ -352,10 +352,6 @@ class InwestycjaController extends Controller
             'portfel' => new PortfelResource($portfel)
         ]);
     }
-
-    // =========================================================================
-    // KONIEC NOWEGO KODU
-    // =========================================================================
 
     /**
      * @OA\Get(
