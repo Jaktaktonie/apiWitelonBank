@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\PrzelewResource; // Użyj swojego istniejącego PrzelewResource
+use App\Http\Resources\PrzelewResource;
+
+// Użyj swojego istniejącego PrzelewResource
 use App\Models\Konto;
 use App\Models\Przelew;
 use App\Models\Uzytkownik;
@@ -89,9 +91,7 @@ class AdminPrzelewController extends Controller
             }
             $query->where('nr_konta_odbiorcy', $konto->nr_konta);
         } else {
-            // Jeśli typ nie jest podany lub jest niepoprawny (wg specyfikacji, brak typu oznacza wszystkie)
-            // Pokaż przelewy, gdzie konto jest nadawcą LUB odbiorcą
-            // Upewnij się, że model Konto ma pole 'numer_rachunku'
+
             if (empty($konto->nr_konta)) {
                 // Jeśli nie ma numeru rachunku, możemy pokazać tylko wychodzące
                 $query->where('id_konta_nadawcy', $idKonta);
@@ -103,31 +103,30 @@ class AdminPrzelewController extends Controller
             }
         }
 
-        // Domyślne sortowanie - najnowsze najpierw
+
         $query->orderBy('data_zlecenia', 'desc');
 
         // 5. Paginacja
         $naStrone = $request->query('na_strone', 15);
         $przelewyPaginator = $query->paginate($naStrone, ['*'], 'page', $request->query('strona', 1));
 
-        // **NOWA CZĘŚĆ: Dodanie pola określającego typ przelewu z perspektywy konta**
-        $numerRachunkuKontekstowegoKonta = $konto->numer_rachunku; // Upewnij się, że to pole istnieje i jest poprawne
 
-        // Modyfikujemy kolekcję wewnątrz paginatora
+        $numerRachunkuKontekstowegoKonta = $konto->numer_rachunku;
+
+
         // $przelewyPaginator->getCollection() zwraca Illuminate\Support\Collection
-        $przelewyPaginator->getCollection()->transform(function ($przelew) use ($idKonta, $numerRachunkuKontekstowegoKonta,$query) {
+        $przelewyPaginator->getCollection()->transform(function ($przelew) use ($idKonta, $numerRachunkuKontekstowegoKonta, $query) {
             if ($przelew->id_konta_nadawcy == $idKonta) {
                 $przelew->typ_dla_konta_kontekstowego = 'wychodzacy';
             } elseif ($numerRachunkuKontekstowegoKonta && $przelew->nr_konta_odbiorcy == $numerRachunkuKontekstowegoKonta) {
                 $przelew->typ_dla_konta_kontekstowego = 'przychodzacy';
             } else {
-                // Ta sytuacja nie powinna wystąpić, jeśli filtry są poprawne,
-                // ale można ustawić wartość domyślną lub null.
+
                 $przelew->typ_dla_konta_kontekstowego = 'przychodzacy'; // lub 'nieokreslony'
             }
-            $przelew->nazwa_nadawcy = Uzytkownik::query()->where('id',Konto::query()->where('id', $przelew->id_konta_nadawcy)->value('id_uzytkownika'))->value('imie');
+            $przelew->nazwa_nadawcy = Uzytkownik::query()->where('id', Konto::query()->where('id', $przelew->id_konta_nadawcy)->value('id_uzytkownika'))->value('imie');
             $przelew->nr_konta_nadawcy = Konto::query()->where('id', $przelew->id_konta_nadawcy)->value('nr_konta');
-            return $przelew; // transform oczekuje zwróconego (zmodyfikowanego) elementu
+            return $przelew;
         });
 
         return PrzelewResource::collection($przelewyPaginator);

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\KontoResource; // Użyj swojego istniejącego KontoResource
+use App\Http\Resources\KontoResource;
+
+// Użyj swojego istniejącego KontoResource
 use App\Models\Konto;
 use App\Models\Uzytkownik;
 use Illuminate\Http\Request;
