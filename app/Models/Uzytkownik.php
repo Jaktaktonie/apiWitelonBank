@@ -65,18 +65,22 @@ class Uzytkownik extends Authenticatable
         $this->save();
         $this->timestamps = true;
     }
+
     public function konta()
     {
         return $this->hasMany(Konto::class, 'id_uzytkownika'); // 'id_uzytkownika' to klucz obcy w tabeli 'konta'
     }
+
     public function portfel()
     {
         return $this->hasMany(Portfel::class, 'id_uzytkownika'); // 'id_uzytkownika' to klucz obcy w tabeli 'konta'
     }
+
     public function zleceniaStale()
     {
         return $this->hasMany(ZlecenieStale::class, 'id_uzytkownika');
     }
+
     public function zapisaniOdbiorcy()
     {
         return $this->hasMany(ZapisanyOdbiorca::class, 'id_uzytkownika');

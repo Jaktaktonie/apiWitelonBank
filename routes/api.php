@@ -11,7 +11,9 @@ use App\Http\Controllers\UzytkownikController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TestController;
-use App\Http\Controllers\Api\KontoController; // Popraw ścieżkę jeśli trzeba
+use App\Http\Controllers\Api\KontoController;
+
+// Popraw ścieżkę jeśli trzeba
 
 Route::get('/test', [TestController::class, 'index']);
 Route::post('/test', [TestController::class, 'store']);
