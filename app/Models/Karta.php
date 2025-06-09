@@ -74,7 +74,7 @@ class Karta extends Model
 
     protected $fillable = [
         'id_konta',
-        'nr_karty',         // Pamiętaj, że w migracji jest unikalny. Generowany przez system.
+        'nr_karty',         // W migracji jest unikalny. Generowany przez system.
         'cvc_hash',         // Hash CVC, nie powinien być nigdy zwracany w API.
         'data_waznosci',
         'zablokowana',

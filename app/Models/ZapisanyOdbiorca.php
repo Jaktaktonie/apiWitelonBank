@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ZapisanyOdbiorca extends Model
 {
     use HasFactory;
+
     protected $table = 'zapisani_odbiorcy';
     protected $fillable = [
         'id_uzytkownika',

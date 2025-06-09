@@ -8,24 +8,23 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Konto extends Model
 {
     protected $table = 'konta'; // <--- DODAJ TĘ LINIĘ
+
     public function przelewyWychodzace()
     {
         return $this->hasMany(Przelew::class, 'id_konta_nadawcy');
     }
 
-// Opcjonalnie, jeśli chcesz łatwo znaleźć przelewy przychodzące na Twoje konta w systemie
-// To jest bardziej złożone, bo przelewy są identyfikowane przez nr_konta_odbiorcy (string)
-// Można by stworzyć metodę, która szuka przelewów po numerach kont użytkownika
     public function getPrzelewyPrzychodzaceAttribute()
     {
         return Przelew::where('nr_konta_odbiorcy', $this->nr_konta)->get();
     }
+
     protected $fillable = [
         'id_uzytkownika',
         'nr_konta',
         'saldo',
-        'limit_przelewu', // Dodaj, jeśli brakuje
-        'zablokowane',    // Dodaj, jeśli brakuje
+        'limit_przelewu',
+        'zablokowane',
         'waluta',
         'token_zamkniecia',
         'token_zamkniecia_wygasa_o',
@@ -43,10 +42,12 @@ class Konto extends Model
     {
         return $this->belongsTo(Uzytkownik::class, 'id_uzytkownika');
     }
+
     public function karty()
     {
         return $this->hasMany(Karta::class, 'id_konta');
     }
+
     public function zleceniaStaleZrodlowe(): HasMany
     {
         return $this->hasMany(ZlecenieStale::class, 'id_konta_zrodlowego');

@@ -83,7 +83,6 @@ class ZlecenieStale extends Model
         return $this->belongsTo(Konto::class, 'id_konta_zrodlowego');
     }
 
-    // Metoda pomocnicza do obliczania następnej daty wykonania
     // To jest uproszczona logika, produkcyjna powinna być bardziej rozbudowana
     // i uwzględniać np. dni wolne, koniec miesiąca itp.
     public function obliczNastepneWykonanie(?string $odDaty = null): ?\Illuminate\Support\Carbon
@@ -94,15 +93,13 @@ class ZlecenieStale extends Model
 
         $start = $odDaty ? \Illuminate\Support\Carbon::parse($odDaty) : \Illuminate\Support\Carbon::parse($this->data_nastepnego_wykonania ?? $this->data_startu);
 
-        // Jeśli data_nastepnego_wykonania jest już ustawiona i jest w przyszłości, użyj jej
-        // lub jeśli jest to data_startu to też.
         if ($start->isFuture() || $start->isToday()) {
             // Jeśli data startu jest dzisiaj lub w przyszłości, a nie ma daty następnego wykonania, to data startu jest pierwszą datą wykonania.
             if (is_null($this->data_nastepnego_wykonania) && (\Illuminate\Support\Carbon::parse($this->data_startu)->isFuture() || \Illuminate\Support\Carbon::parse($this->data_startu)->isToday())) {
                 return \Illuminate\Support\Carbon::parse($this->data_startu);
             }
             // Jeśli data nastepnego wykonania już minęła, obliczamy nową
-            if ($start->isPast() && !is_null($this->data_nastepnego_wykonania)){
+            if ($start->isPast() && !is_null($this->data_nastepnego_wykonania)) {
                 // celowo przechodzimy dalej do obliczenia nowej daty
             } else if (!is_null($this->data_nastepnego_wykonania)) {
                 return $start;
