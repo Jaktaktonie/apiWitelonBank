@@ -139,14 +139,11 @@ class ZlecenieStaleController extends Controller
     {
         $data = $request->validated();
 
-        // Jeśli zmieniono datę startu lub częstotliwość, przelicz data_nastepnego_wykonania
-        // Ta logika może być bardziej skomplikowana w zależności od wymagań biznesowych
-        // np. co jeśli zlecenie już było wykonane, a zmieniamy datę startu na późniejszą?
         if (isset($data['data_startu']) || isset($data['czestotliwosc'])) {
             // Tymczasowo tworzymy obiekt z nowymi danymi, aby móc użyć metody obliczającej
             $tempZlecenie = clone $zlecenie_stale;
             $tempZlecenie->fill($data); // Zastosuj nowe dane do tymczasowego obiektu
-            $data['data_nastepnego_wykonania'] = $tempZlecenie->obliczNastepneWykonanie( $data['data_startu'] ?? $zlecenie_stale->data_startu->format('Y-m-d') );
+            $data['data_nastepnego_wykonania'] = $tempZlecenie->obliczNastepneWykonanie($data['data_startu'] ?? $zlecenie_stale->data_startu->format('Y-m-d'));
         }
 
         $data['id_uzytkownika'] = Auth::id();

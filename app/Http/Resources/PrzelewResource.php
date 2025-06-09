@@ -25,7 +25,7 @@ class PrzelewResource extends JsonResource
             'adres_odbiorcy_linia1' => $this->adres_odbiorcy_linia1,
             'adres_odbiorcy_linia2' => $this->adres_odbiorcy_linia2,
             'tytul' => $this->tytul,
-            'kwota' => (float) $this->kwota,
+            'kwota' => (float)$this->kwota,
             'waluta_przelewu' => $this->waluta_przelewu,
             'status' => $this->status,
             'data_zlecenia' => $this->data_zlecenia->toDateTimeString(),

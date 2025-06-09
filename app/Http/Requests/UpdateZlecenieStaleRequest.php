@@ -45,6 +45,7 @@ class UpdateZlecenieStaleRequest extends FormRequest
             'aktywne' => 'sometimes|boolean',
         ];
     }
+
     public function messages(): array
     {
         return [

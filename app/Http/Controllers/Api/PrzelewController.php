@@ -11,13 +11,21 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB; // Dla transakcji
+use Illuminate\Support\Facades\DB;
+
+// Dla transakcji
 use App\Models\Konto;
 use App\Models\Przelew;
-use App\Http\Resources\PrzelewResource; // Stworzymy go później
+use App\Http\Resources\PrzelewResource;
+
+// Stworzymy go później
 use OpenApi\Attributes as OA;
-use Illuminate\Support\Facades\View; // Dla renderowania widoku
-use Barryvdh\DomPDF\Facade\Pdf; // Fasada dla dompdf
+use Illuminate\Support\Facades\View;
+
+// Dla renderowania widoku
+use Barryvdh\DomPDF\Facade\Pdf;
+
+// Fasada dla dompdf
 
 class PrzelewController extends Controller
 {
@@ -87,7 +95,7 @@ class PrzelewController extends Controller
         }
 
         // --- Walidacja Salda i Waluty ---
-        $kwotaPrzelewu = (float) $request->kwota;
+        $kwotaPrzelewu = (float)$request->kwota;
 
         if ($kontoNadawcy->waluta !== $request->waluta_przelewu) {
             // TODO: Obsługa przewalutowania lub błąd, jeśli waluty się nie zgadzają
@@ -99,13 +107,10 @@ class PrzelewController extends Controller
             return response()->json(['message' => 'Niewystarczające środki na koncie.'], 400);
         }
 
-        // --- Sprawdzenie limitu przelewu (jeśli istnieje) ---
         if ($kontoNadawcy->limit_przelewu && $kwotaPrzelewu > $kontoNadawcy->limit_przelewu) {
             return response()->json(['message' => "Kwota przelewu (" . $kwotaPrzelewu . ") przekracza dzienny limit przelewu (" . $kontoNadawcy->limit_przelewu . ") dla tego konta."], 400);
         }
 
-
-        // --- Transakcja bazodanowa ---
         try {
             DB::beginTransaction();
 
@@ -124,7 +129,6 @@ class PrzelewController extends Controller
                 'kwota' => $kwotaPrzelewu,
                 'waluta_przelewu' => $request->waluta_przelewu,
                 'status' => 'zrealizowany', // Zakładamy natychmiastową realizację dla uproszczenia
-                // W realnym systemie mógłby być 'oczekujacy', a potem proces wsadowy
                 'data_zlecenia' => now(),
                 'data_realizacji' => now(),
             ]);
@@ -134,7 +138,7 @@ class PrzelewController extends Controller
             if ($kontoOdbiorcy) {
                 if ($kontoOdbiorcy->waluta !== $request->waluta_przelewu) {
                     // TODO: Obsługa przewalutowania dla odbiorcy
-                    // Na razie pomijamy księgowanie, jeśli waluty się nie zgadzają
+                    // Pomijamy księgowanie, jeśli waluty się nie zgadzają
                     Log::warning("Próba zaksięgowania przelewu przychodzącego o innej walucie. Przelew ID: {$przelew->id}, Konto odbiorcy ID: {$kontoOdbiorcy->id}");
                 } else {
                     $kontoOdbiorcy->saldo += $kwotaPrzelewu;
@@ -236,12 +240,11 @@ class PrzelewController extends Controller
         $naStrone = $request->query('na_strone', 15);
         $przelewyPaginator = $query->paginate($naStrone, ['*'], 'page', $request->query('strona', 1));
 
-        // **NOWA CZĘŚĆ: Dodanie pola określającego typ przelewu z perspektywy konta**
         $numerRachunkuKontekstowegoKonta = $konto->numer_rachunku; // Upewnij się, że to pole istnieje i jest poprawne
 
         // Modyfikujemy kolekcję wewnątrz paginatora
         // $przelewyPaginator->getCollection() zwraca Illuminate\Support\Collection
-        $przelewyPaginator->getCollection()->transform(function ($przelew) use ($idKonta, $numerRachunkuKontekstowegoKonta,$query) {
+        $przelewyPaginator->getCollection()->transform(function ($przelew) use ($idKonta, $numerRachunkuKontekstowegoKonta, $query) {
             if ($przelew->id_konta_nadawcy == $idKonta) {
                 $przelew->typ_dla_konta_kontekstowego = 'wychodzacy';
             } elseif ($numerRachunkuKontekstowegoKonta && $przelew->nr_konta_odbiorcy == $numerRachunkuKontekstowegoKonta) {
@@ -251,7 +254,7 @@ class PrzelewController extends Controller
                 // ale można ustawić wartość domyślną lub null.
                 $przelew->typ_dla_konta_kontekstowego = 'przychodzacy'; // lub 'nieokreslony'
             }
-            $przelew->nazwa_nadawcy = Uzytkownik::query()->where('id',Konto::query()->where('id', $przelew->id_konta_nadawcy)->value('id_uzytkownika'))->value('imie');
+            $przelew->nazwa_nadawcy = Uzytkownik::query()->where('id', Konto::query()->where('id', $przelew->id_konta_nadawcy)->value('id_uzytkownika'))->value('imie');
             $przelew->nr_konta_nadawcy = Konto::query()->where('id', $przelew->id_konta_nadawcy)->value('nr_konta');
             return $przelew; // transform oczekuje zwróconego (zmodyfikowanego) elementu
         });
@@ -326,6 +329,7 @@ class PrzelewController extends Controller
 
         return new PrzelewResource($przelew);
     }
+
     /**
      * @OA\Get(
      *     path="/api/konta/{konto}/przelewy/export",

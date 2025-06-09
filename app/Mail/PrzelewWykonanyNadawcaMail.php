@@ -3,7 +3,9 @@
 namespace App\Mail;
 
 use App\Models\Przelew;
-use App\Models\Uzytkownik; // Użytkownik (nadawca), do którego wysyłamy email
+use App\Models\Uzytkownik;
+
+// Użytkownik (nadawca), do którego wysyłamy email
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;

@@ -1,5 +1,7 @@
 <?php
-namespace App\Http\Controllers\Api; // Dostosuj namespace
+
+namespace App\Http\Controllers\Api;
+// Dostosuj namespace
 
 use App\Http\Controllers\Controller;
 use App\Mail\PotwierdzenieZamknieciaKontaMail;
@@ -10,7 +12,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use Carbon\Carbon; // Dla daty ważności tokenu
+use Carbon\Carbon;
+
+// Dla daty ważności tokenu
 
 /**
  * @OA\Schema(

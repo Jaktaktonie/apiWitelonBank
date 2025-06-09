@@ -16,7 +16,7 @@ class ZlecenieStaleResource extends JsonResource
             'nr_konta_docelowego' => $this->nr_konta_docelowego,
             'nazwa_odbiorcy' => $this->nazwa_odbiorcy,
             'tytul_przelewu' => $this->tytul_przelewu,
-            'kwota' => (float) $this->kwota,
+            'kwota' => (float)$this->kwota,
             'czestotliwosc' => $this->czestotliwosc,
             'data_startu' => $this->data_startu->format('Y-m-d'),
             'data_nastepnego_wykonania' => $this->data_nastepnego_wykonania ? $this->data_nastepnego_wykonania->format('Y-m-d') : null,

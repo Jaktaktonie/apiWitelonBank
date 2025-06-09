@@ -13,8 +13,8 @@ class PortfelResource extends JsonResource
         return [
             'id' => $this->id,
             'id_uzytkownika' => $this->id_uzytkownika,
-            'saldo_bitcoin' => (string) $this->saldo_bitcoin,
-            'saldo_ethereum' => (string) $this->saldo_ethereum,
+            'saldo_bitcoin' => (string)$this->saldo_bitcoin,
+            'saldo_ethereum' => (string)$this->saldo_ethereum,
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),
         ];
