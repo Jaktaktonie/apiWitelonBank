@@ -43,7 +43,7 @@ class StoreZlecenieStaleRequest extends FormRequest
                     $query->where('id_uzytkownika', Auth::id());
                 }),
             ],
-            'nr_konta_docelowego' => ['required', 'string', 'regex:/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/', 'max:34'], // Prosty regex dla IBAN, dostosuj
+            'nr_konta_docelowego' => ['required', 'string', 'regex:/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/', 'max:34'],
             'nazwa_odbiorcy' => 'required|string|max:255',
             'tytul_przelewu' => 'required|string|max:255',
             'kwota' => 'required|numeric|min:0.01|max:9999999.99', // Dostosuj max

@@ -1,21 +1,38 @@
 <?php
 
+
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // Używane pośrednio przez Sanctum, ale nie bezpośrednio tutaj
+use Illuminate\Support\Facades\Auth;
+
+// Używane pośrednio przez Sanctum, ale nie bezpośrednio tutaj
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Mail; // Ważne dla wysyłania maili
-use App\Models\Uzytkownik; // Twój model użytkownika
-use App\Mail\DwuetapowyKodMail; // Twój Mailable
-use OpenApi\Attributes as OA; // Dla Swaggera/OpenAPI
-use Illuminate\Support\Facades\Log; // Do logowania błędów
+use Illuminate\Support\Facades\Mail;
+
+// Ważne dla wysyłania maili
+use App\Models\Uzytkownik;
+
+// Twój model użytkownika
+use App\Mail\DwuetapowyKodMail;
+
+// Twój Mailable
+use OpenApi\Attributes as OA;
+
+// Dla Swaggera/OpenAPI
+use Illuminate\Support\Facades\Log;
+
+// Do logowania błędów
 use Illuminate\Support\Str;
 use App\Mail\ResetPasswordMail;
-use Illuminate\Support\Facades\DB; // Dla operacji na tabeli password_reset_tokens
-use Illuminate\Support\Carbon;   // Dla obsługi czasu
+use Illuminate\Support\Facades\DB;
+
+// Dla operacji na tabeli password_reset_tokens
+use Illuminate\Support\Carbon;
+
+// Dla obsługi czasu
 class uzytkownikController extends Controller
 {
     /**
@@ -86,21 +103,17 @@ class uzytkownikController extends Controller
         }
 
         if (!$user->weryfikacja) {
-            // Możesz rozważyć inny kod błędu lub komunikat, jeśli 'weryfikacja' to weryfikacja emaila po rejestracji, a nie 2FA
+
             return response()->json(['message' => 'Konto nie zostało zweryfikowane.'], 401);
         }
 
-        // Jeśli użytkownik ma już aktywny kod 2FA, który nie wygasł,
-        // można rozważyć jego ponowne wysłanie lub poinformowanie, że kod już został wysłany.
-        // Dla uproszczenia, generujemy nowy za każdym razem.
         $user->generujKodDwuetapowy(); // Ta metoda jest w modelu Uzytkownik
 
         try {
             Mail::to($user->email)->send(new DwuetapowyKodMail($user));
         } catch (\Exception $e) {
             Log::error('Błąd wysyłania maila 2FA dla użytkownika ' . $user->email . ': ' . $e->getMessage());
-            // Możesz tu zresetować kod 2FA, aby nie pozostawić użytkownika w stanie "oczekiwania na kod", który nie dotarł
-            // $user->resetujKodDwuetapowy();
+            //
             return response()->json(['message' => 'Nie udało się wysłać kodu weryfikacyjnego. Spróbuj ponownie później lub skontaktuj się z pomocą.'], 500);
         }
 
@@ -181,33 +194,23 @@ class uzytkownikController extends Controller
         $user = Uzytkownik::where('email', $request->email)->first();
 
         if (!$user) {
-            // Można też zwrócić 401 dla bezpieczeństwa (nie ujawniać, czy email istnieje)
-            // ale 404 jest bardziej precyzyjne, jeśli to nie jest kwestia bezpieczeństwa
             return response()->json(['message' => 'Użytkownik o podanym adresie email nie został znaleziony.'], 404);
         }
 
-        // Sprawdź, czy kod istnieje, czy się zgadza i czy nie wygasł
-        if (is_null($user->dwuetapowy_kod) || // Sprawdzenie, czy kod w ogóle został wygenerowany
+
+        if (is_null($user->dwuetapowy_kod) ||
             $user->dwuetapowy_kod !== $request->dwuetapowy_kod ||
-            is_null($user->dwuetapowy_kod_wygasa_o) || // Sprawdzenie, czy data wygaśnięcia jest ustawiona
+            is_null($user->dwuetapowy_kod_wygasa_o) ||
             now()->gt($user->dwuetapowy_kod_wygasa_o)
         ) {
-            // Nie resetuj kodu od razu, jeśli użytkownik mógł się pomylić.
-            // Rozważ logikę blokady po X nieudanych próbach.
-            // Jednak dla prostoty, jeśli kod jest niepoprawny lub wygasły, po prostu informujemy.
-            // Jeśli chcesz, możesz zresetować kod po nieudanej próbie, aby zapobiec wielokrotnemu użyciu starego kodu:
-            // $user->resetujKodDwuetapowy();
+
             return response()->json(['message' => 'Nieprawidłowy lub wygasły kod weryfikacyjny.'], 401);
         }
 
-        // Kod jest poprawny, zresetuj go, aby nie można go było użyć ponownie
         $user->resetujKodDwuetapowy(); // Ta metoda jest w modelu Uzytkownik
 
-        // Usuń stare tokeny (opcjonalnie, ale dobra praktyka dla bezpieczeństwa)
-        // $user->tokens()->delete();
-
         // Wygeneruj nowy token API dla użytkownika
-        $token = $user->createToken('api_token')->plainTextToken; // Możesz dać bardziej opisową nazwę tokena
+        $token = $user->createToken('api_token')->plainTextToken; //
 
         return response()->json([
             'message' => 'Zalogowano pomyślnie.',
@@ -217,7 +220,7 @@ class uzytkownikController extends Controller
                 'imie' => $user->imie,
                 'nazwisko' => $user->nazwisko,
                 'email' => $user->email,
-                'administrator' => (bool) $user->administrator,
+                'administrator' => (bool)$user->administrator,
             ]
         ], 200);
     }
@@ -247,7 +250,7 @@ class uzytkownikController extends Controller
      */
     public function logout(Request $request)
     {
-        // Upewnij się, że trasa /api/logout jest chroniona przez middleware 'auth:sanctum'
+        // Upewniam się, że trasa /api/logout jest chroniona przez middleware 'auth:sanctum'
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Wylogowano pomyślnie.'], 200);
@@ -347,7 +350,7 @@ class uzytkownikController extends Controller
         }
 
         // Sprawdzenie ważności tokenu (domyślnie 60 minut)
-        $expiresInMinutes = config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 60);
+        $expiresInMinutes = config('auth.passwords.' . config('auth.defaults.passwords') . '.expire', 60);
         if (Carbon::parse($resetRecord->created_at)->addMinutes($expiresInMinutes)->isPast()) {
             DB::table('password_reset_tokens')->where('email', $request->email)->delete(); // Usuń wygasły token
             return response()->json(['message' => 'Token resetowania hasła wygasł.'], 400);

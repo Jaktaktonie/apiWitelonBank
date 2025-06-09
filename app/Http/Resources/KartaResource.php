@@ -27,7 +27,7 @@ class KartaResource extends JsonResource
             'platnosci_zblizeniowe_aktywne' => $this->platnosci_zblizeniowe_aktywne,
             'created_at' => $this->created_at->toDateTimeString(),
             'updated_at' => $this->updated_at->toDateTimeString(),
-            'konto' => new KontoLightResource($this->whenLoaded('konto')), // Opcjonalnie, jeśli ładujesz relację
+            'konto' => new KontoLightResource($this->whenLoaded('konto')),
         ];
     }
 }
